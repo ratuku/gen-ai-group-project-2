@@ -5,10 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "coding-assistant"
 version = "0.1.0"
-description = "Framework-neutral contracts for an autonomous CLI coding assistant"
+description = "An autonomous CLI coding assistant built around MCP tools"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "mcp>=2.3,<3",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -21,5 +23,15 @@ testpaths = ["tests"]
 [tool.mypy]
 python_version = "3.11"
 strict = true
+follow_imports = "skip"
 mypy_path = "src"
 files = ["src", "tests"]
+
+[[tool.mypy.overrides]]
+module = [
+    "echo_mcp_server",
+    "test_architecture",
+    "test_mcp_client",
+    "test_mcp_config",
+]
+disallow_untyped_decorators = false
