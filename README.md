@@ -15,9 +15,10 @@ pytest
 mypy
 ```
 
-The stable component interfaces are exported from `coding_assistant.contracts` and
-documented in [docs/contracts.md](docs/contracts.md). Runtime implementations will be
-added in later tickets.
+The provisional vertical-slice interfaces are exported from
+`coding_assistant.contracts`. The repository and runtime boundaries are documented in
+[docs/architecture.md](docs/architecture.md). Concrete implementations and stronger
+domain models will be extracted in later tickets after the end-to-end flow is validated.
 
 ## Learning outcomes
 
