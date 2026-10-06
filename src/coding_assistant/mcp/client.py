@@ -21,9 +21,10 @@ class MCPClientError(RuntimeError):
 class MCPClient:
     """Own server lifecycles and expose one collision-safe MCP tool namespace.
 
-    Tools are presented as ``server_name.tool_name``. Qualification preserves
-    the server needed for routing and prevents tools with the same name on two
-    servers from overwriting each other.
+    Tools are presented as ``server_name.tool_name`` with separator characters
+    escaped inside each component. Qualification preserves the server needed for
+    routing and prevents tools with the same name on two servers from overwriting
+    each other.
     """
 
     def __init__(self, configs: Sequence[ServerConfig]) -> None:
@@ -83,13 +84,34 @@ class MCPClient:
                 if server_name not in self._clients:
                     await self.connect(server_name)
                     newly_connected.append(server_name)
-        except BaseException:
-            for server_name in reversed(newly_connected):
-                await self.disconnect(server_name)
+        except BaseException as exc:
+            failures = await self._disconnect_many(newly_connected)
+            if failures:
+                cleanup_error = "; ".join(failures)
+                if not isinstance(exc, Exception):
+                    exc.add_note(f"MCP rollback cleanup failed: {cleanup_error}")
+                    raise
+                raise MCPClientError(
+                    f"{_describe_exception(exc)}; rollback cleanup failed: "
+                    f"{cleanup_error}"
+                ) from exc
             raise
 
     async def disconnect(self, server_name: str) -> None:
-        """Close one connection; repeated calls are safe."""
+        """Close the newest connection; repeated calls are safe.
+
+        MCP transports use nested asynchronous contexts, so active connections must
+        be closed in reverse connection order.
+        """
+
+        if server_name in self._stacks:
+            newest_server = next(reversed(self._stacks))
+            if server_name != newest_server:
+                raise MCPClientError(
+                    f"Cannot disconnect MCP server {server_name!r} before "
+                    f"{newest_server!r}; active servers must be disconnected in "
+                    "reverse connection order"
+                )
 
         self._clients.pop(server_name, None)
         self._routes = {
@@ -111,14 +133,20 @@ class MCPClient:
     async def disconnect_all(self) -> None:
         """Close all active connections in reverse connection order."""
 
+        failures = await self._disconnect_many(tuple(self._stacks))
+        if failures:
+            raise MCPClientError("; ".join(failures))
+
+    async def _disconnect_many(self, server_names: Sequence[str]) -> list[str]:
+        """Attempt each requested close in reverse order and collect failures."""
+
         failures: list[str] = []
-        for server_name in reversed(tuple(self._stacks)):
+        for server_name in reversed(server_names):
             try:
                 await self.disconnect(server_name)
             except MCPClientError as exc:
                 failures.append(str(exc))
-        if failures:
-            raise MCPClientError("; ".join(failures))
+        return failures
 
     async def list_tools(self) -> Sequence[Payload]:
         """Discover and normalize tools from every configured server."""
@@ -136,7 +164,7 @@ class MCPClient:
                 ) from exc
 
             for tool in tools:
-                qualified_name = f"{server_name}.{tool.name}"
+                qualified_name = _qualified_tool_name(server_name, tool.name)
                 routes[qualified_name] = (server_name, tool.name)
                 discovered.append(_normalize_tool(server_name, qualified_name, tool))
 
@@ -194,6 +222,14 @@ def _normalize_tool(server_name: str, qualified_name: str, tool: Tool) -> Payloa
         "description": tool.description or "",
         "input_schema": dict(tool.input_schema),
     }
+
+
+def _qualified_tool_name(server_name: str, tool_name: str) -> str:
+    return f"{_escape_name_component(server_name)}.{_escape_name_component(tool_name)}"
+
+
+def _escape_name_component(value: str) -> str:
+    return value.replace("%", "%25").replace(".", "%2E")
 
 
 def _normalize_result(

@@ -19,11 +19,14 @@ class FakeSDKClient:
     fail_target: str | None = None
     fail_call = False
     return_tool_error = False
+    tool_names_by_target: dict[object, tuple[str, ...]] = {}
+    close_failures_by_target: dict[object, int] = {}
 
     def __init__(self, target: object, *, read_timeout_seconds: float) -> None:
         self.target = target
         self.read_timeout_seconds = read_timeout_seconds
         self.closed = False
+        self.close_attempts = 0
         self.calls: list[tuple[str, dict[str, object]]] = []
         self.__class__.instances.append(self)
 
@@ -33,10 +36,28 @@ class FakeSDKClient:
         return self
 
     async def __aexit__(self, *args: object) -> None:
+        self.close_attempts += 1
+        failures_remaining = self.close_failures_by_target.get(self.target, 0)
+        if failures_remaining:
+            self.close_failures_by_target[self.target] = failures_remaining - 1
+            raise RuntimeError("close failed")
         self.closed = True
 
     async def list_tools(self, *, cursor: str | None = None) -> SimpleNamespace:
         suffix = str(self.target).rsplit("/", maxsplit=1)[-1]
+        configured_names = self.tool_names_by_target.get(self.target)
+        if configured_names is not None:
+            return SimpleNamespace(
+                tools=[
+                    Tool(
+                        name=name,
+                        description=f"Tool from {suffix}",
+                        input_schema={"type": "object"},
+                    )
+                    for name in configured_names
+                ],
+                next_cursor=None,
+            )
         if cursor is None:
             return SimpleNamespace(
                 tools=[
@@ -82,6 +103,8 @@ def reset_fake_client() -> None:
     FakeSDKClient.fail_target = None
     FakeSDKClient.fail_call = False
     FakeSDKClient.return_tool_error = False
+    FakeSDKClient.tool_names_by_target.clear()
+    FakeSDKClient.close_failures_by_target.clear()
 
 
 @pytest.mark.asyncio
@@ -116,6 +139,35 @@ async def test_discovers_qualified_tools_and_routes_duplicate_names(
     assert second.calls == [("search", {"query": "MCP"})]
     assert first.closed is True
     assert second.closed is True
+
+
+@pytest.mark.asyncio
+async def test_escaped_qualified_names_cannot_collide(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(client_module, "Client", FakeSDKClient)
+    first_target = "https://example.com/first"
+    second_target = "https://example.com/second"
+    FakeSDKClient.tool_names_by_target = {
+        first_target: ("b.c",),
+        second_target: ("c",),
+    }
+    client = MCPClient(
+        (
+            ServerConfig(name="a", url=first_target),
+            ServerConfig(name="a.b", url=second_target),
+        )
+    )
+
+    async with client:
+        tools = await client.list_tools()
+        await client.call_tool("a.b%2Ec", {})
+        await client.call_tool("a%2Eb.c", {})
+
+    assert [tool["name"] for tool in tools] == ["a.b%2Ec", "a%2Eb.c"]
+    first, second = FakeSDKClient.instances
+    assert first.calls == [("b.c", {})]
+    assert second.calls == [("c", {})]
 
 
 @pytest.mark.asyncio
@@ -192,6 +244,57 @@ async def test_connect_all_rolls_back_connections_opened_before_failure(
 
 
 @pytest.mark.asyncio
+async def test_disconnect_rejects_non_reverse_order(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(client_module, "Client", FakeSDKClient)
+    client = MCPClient(
+        (
+            ServerConfig(name="first", url="https://example.com/first"),
+            ServerConfig(name="second", url="https://example.com/second"),
+        )
+    )
+    await client.connect_all()
+
+    with pytest.raises(MCPClientError, match="reverse connection order"):
+        await client.disconnect("first")
+
+    assert client.connected_servers == ("first", "second")
+    await client.disconnect_all()
+    assert len(client.connected_servers) == 0
+
+
+@pytest.mark.asyncio
+async def test_connect_rollback_continues_after_disconnect_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(client_module, "Client", FakeSDKClient)
+    first_target = "https://example.com/first"
+    second_target = "https://example.com/second"
+    broken_target = "https://example.com/broken"
+    FakeSDKClient.fail_target = broken_target
+    FakeSDKClient.close_failures_by_target = {second_target: 1}
+    client = MCPClient(
+        (
+            ServerConfig(name="first", url=first_target),
+            ServerConfig(name="second", url=second_target),
+            ServerConfig(name="broken", url=broken_target),
+        )
+    )
+
+    with pytest.raises(
+        MCPClientError,
+        match="connection refused; rollback cleanup failed: .*close failed",
+    ):
+        await client.connect_all()
+
+    first, second, _ = FakeSDKClient.instances
+    assert second.close_attempts == 1
+    assert first.closed is True
+    assert client.connected_servers == ()
+
+
+@pytest.mark.asyncio
 async def test_real_stdio_server_is_discovered_and_invoked() -> None:
     server_script = Path(__file__).parent / "fixtures" / "echo_mcp_server.py"
     client = MCPClient(
@@ -211,3 +314,31 @@ async def test_real_stdio_server_is_discovered_and_invoked() -> None:
     assert [tool["name"] for tool in tools] == ["fixture.echo"]
     assert result["is_error"] is False
     assert result["structured_content"] == {"result": "hello MCP"}
+
+
+@pytest.mark.asyncio
+async def test_real_stdio_servers_enforce_reverse_disconnect_order() -> None:
+    server_script = Path(__file__).parent / "fixtures" / "echo_mcp_server.py"
+    client = MCPClient(
+        (
+            ServerConfig(
+                name="first",
+                command=sys.executable,
+                args=(str(server_script),),
+            ),
+            ServerConfig(
+                name="second",
+                command=sys.executable,
+                args=(str(server_script),),
+            ),
+        )
+    )
+    await client.connect_all()
+
+    try:
+        with pytest.raises(MCPClientError, match="reverse connection order"):
+            await client.disconnect("first")
+    finally:
+        await client.disconnect_all()
+
+    assert len(client.connected_servers) == 0

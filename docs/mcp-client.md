@@ -51,7 +51,12 @@ operation fails.
 `MCPClient.list_tools()` connects configured servers, follows tool-list pagination,
 and returns provider-neutral mappings. Tool names are qualified as
 `server_name.tool_name`; this prevents collisions and gives `call_tool()` the routing
-information it needs.
+information it needs. Literal `%` and `.` characters inside either name are
+percent-escaped, so the qualified name remains unique even when names contain the
+separator.
 
 Tool failures returned by a server remain normal `tool_result` payloads with
 `is_error=true`. Connection, discovery, and protocol failures raise `MCPClientError`.
+Because MCP transports use nested asynchronous contexts, individual connections must
+be closed in reverse connection order. `disconnect_all()` handles that ordering and
+continues attempting cleanup if one server fails to close.
