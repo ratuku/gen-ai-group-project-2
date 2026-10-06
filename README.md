@@ -20,6 +20,10 @@ The provisional vertical-slice interfaces are exported from
 [docs/architecture.md](docs/architecture.md). Concrete implementations and stronger
 domain models will be extracted in later tickets after the end-to-end flow is validated.
 
+The concrete multi-server MCP client and its configuration format are documented in
+[docs/mcp-client.md](docs/mcp-client.md). Individual server configurations are added by
+the filesystem, external-resource, and custom-RAG integration issues.
+
 ## Learning outcomes
 
 By completing this project, we will:
