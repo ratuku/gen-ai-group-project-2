@@ -38,3 +38,10 @@ Build an interactive CLI with streaming responses, tool-call visibility, and con
 Design and document system architecture using state and sequence diagrams.
 Evaluate AI system performance by comparing LLMs and analyzing the effectiveness of the RAG approach.
 Collaboratively develop and document a complete AI application using Git and GitHub.
+
+## RAG document preparation
+
+Step 1 loads documents, splits token-budgeted chunks, and generates local semantic
+embeddings. Install with `python -m pip install -e ".[rag]"`, then run
+`python -m rag_server.prepare`. See [RAG preparation](docs/rag-preparation.md) for
+the output contract and remaining storage/retrieval stages.
