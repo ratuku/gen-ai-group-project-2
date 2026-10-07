@@ -61,12 +61,10 @@ def test_committed_filesystem_server_uses_workspace_root() -> None:
     assert len(config.servers) == 1
     filesystem = config.servers[0]
     assert filesystem.name == "filesystem"
-    assert filesystem.command == "cmd"
+    assert filesystem.command == "node"
     assert filesystem.args == (
-        "/c",
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-filesystem@2026.8.31",
+        f"{project_root / 'config'}/../node_modules/"
+        "@modelcontextprotocol/server-filesystem/dist/index.js",
         str(project_root),
     )
     assert filesystem.cwd == project_root

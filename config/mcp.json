@@ -1,12 +1,9 @@
 {
   "mcpServers": {
     "filesystem": {
-      "command": "cmd",
+      "command": "node",
       "args": [
-        "/c",
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-filesystem@2026.8.31",
+        "${configDir}/../node_modules/@modelcontextprotocol/server-filesystem/dist/index.js",
         "${workspaceRoot}"
       ]
     }

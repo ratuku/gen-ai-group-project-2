@@ -44,7 +44,8 @@ def load_mcp_config(
     """Load a conventional ``mcpServers`` JSON object.
 
     The ``${workspaceRoot}`` placeholder is expanded in stdio arguments,
-    environment values, and working directories. An empty server object is valid
+    environment values, and working directories. ``${configDir}`` expands to the
+    configuration file directory in the same fields. An empty server object is valid
     while integrations are added by later issues.
     """
 
@@ -75,13 +76,15 @@ def load_mcp_config(
         raise ConfigurationError("'mcpServers' must be a JSON object")
 
     servers = tuple(
-        _parse_server(name, value, workspace_root=root)
+        _parse_server(name, value, workspace_root=root, config_dir=config_path.parent)
         for name, value in raw_servers.items()
     )
     return MCPConfig(servers=servers, workspace_root=root)
 
 
-def _parse_server(name: object, raw: object, *, workspace_root: Path) -> ServerConfig:
+def _parse_server(
+    name: object, raw: object, *, workspace_root: Path, config_dir: Path
+) -> ServerConfig:
     if not isinstance(name, str) or not name.strip():
         raise ConfigurationError("Every MCP server must have a non-empty name")
     if not isinstance(raw, dict):
@@ -118,7 +121,9 @@ def _parse_server(name: object, raw: object, *, workspace_root: Path) -> ServerC
     workspace_text = str(workspace_root)
 
     def expand(value: str) -> str:
-        return value.replace("${workspaceRoot}", workspace_text)
+        return value.replace("${configDir}", str(config_dir)).replace(
+            "${workspaceRoot}", workspace_text
+        )
 
     raw_cwd = _optional_string(raw.get("cwd"), name=name, field_name="cwd")
     cwd = workspace_root
