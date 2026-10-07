@@ -18,6 +18,23 @@ pytest
 mypy
 ```
 
+## Basic CLI
+
+```sh
+coding-assistant --help
+coding-assistant
+coding-assistant --task "list tools"
+coding-assistant --demo-loop --task "inspect workspace"
+```
+
+Install the project and run `npm ci` first, as shown above. Use `/servers`, `/tools`,
+`/help`, and `/exit` at the prompt. The default mode demonstrates live MCP connections
+and tool discovery. `--demo-loop` exercises the stateful agent loop with a clearly
+labeled scripted provider and real filesystem calls. Live model-backed coding
+tasks require a provider wired through `--agent`.
+See [CLI demo and agent integration](docs/cli.md) and
+[Basic agent loop](docs/agent-loop.md) for options and demo commands.
+
 ## Filesystem MCP smoke test
 
 The committed MCP configuration starts the official filesystem server through
