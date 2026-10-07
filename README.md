@@ -53,6 +53,21 @@ removed even when a step fails. Windows regression tests in `pytest` also exerci
 read/write/list operations in `R&D`, `repo%USERNAME%`, `repo^name`, and a path with
 spaces, and verify that outside read/write/list operations remain denied.
 
+## External-resource MCP smoke test
+
+The committed MCP configuration also connects the hosted DeepWiki server over
+Streamable HTTP. With internet access, verify tool discovery and retrieval of useful
+external information from a public GitHub repository with:
+
+```powershell
+python scripts/smoke_external_mcp.py
+```
+
+The smoke test asks DeepWiki a concrete question about the public MCP Python SDK
+repository, prints the answer, and exits with a nonzero status if discovery or the
+external request fails. Do not send secrets or private repository information to
+the external service.
+
 The provisional vertical-slice interfaces are exported from
 `coding_assistant.contracts`. The repository and runtime boundaries are documented in
 [docs/architecture.md](docs/architecture.md). Concrete implementations and stronger

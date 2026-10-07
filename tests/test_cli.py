@@ -18,7 +18,8 @@ from coding_assistant.mcp import MCPClient
 class FakeClient:
     instances: list[FakeClient] = []
 
-    def __init__(self, configs: object) -> None:
+    def __init__(self, configs: Sequence[object]) -> None:
+        self.configs = tuple(configs)
         self.connected_servers = ("filesystem", "external")
         self.closed = False
         self.instances.append(self)
@@ -257,6 +258,10 @@ async def test_cli_connects_and_calls_two_real_stdio_servers(tmp_path: Path) -> 
 async def test_scripted_cli_demo_uses_loop_and_honors_limit(
     config: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, limit: int, code: int,
 ) -> None:
+    config.write_text(json.dumps({"mcpServers": {
+        "filesystem": {"url": "https://example.com/filesystem"},
+        "deepwiki": {"url": "https://mcp.deepwiki.com/mcp"},
+    }}), encoding="utf-8")
     class FilesystemDemoClient(FakeClient):
         async def list_tools(self) -> list[Payload]:
             return [{"name": f"filesystem.{name}", "server": "filesystem", "server_tool_name": name}
@@ -276,9 +281,34 @@ async def test_scripted_cli_demo_uses_loop_and_honors_limit(
     ]), output=output)
     assert result == code
     assert "no live LLM" in output.getvalue()
-    assert FakeClient.instances[-1].closed
+    client = FakeClient.instances[-1]
+    assert [getattr(server, "name", None) for server in client.configs] == ["filesystem"]
+    assert client.closed
     if code == 0:
         assert "Workspace inspection complete" in output.getvalue()
         assert "[FILE] README.md" in output.getvalue()
     else:
         assert "Stopped after 1 model iterations" in output.getvalue()
+
+
+@pytest.mark.asyncio
+async def test_normal_cli_keeps_all_configured_servers(
+    config: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config.write_text(json.dumps({"mcpServers": {
+        "filesystem": {"url": "https://example.com/filesystem"},
+        "deepwiki": {"url": "https://mcp.deepwiki.com/mcp"},
+    }}), encoding="utf-8")
+    monkeypatch.setattr(app, "MCPClient", FakeClient)
+
+    result = await app.run_cli(
+        app.parse_arguments(["--config", str(config), "--task", "list tools"]),
+        output=io.StringIO(),
+    )
+
+    assert result == 0
+    client = FakeClient.instances[-1]
+    assert [getattr(server, "name", None) for server in client.configs] == [
+        "filesystem", "deepwiki",
+    ]
+    assert client.closed

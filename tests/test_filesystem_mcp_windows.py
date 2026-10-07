@@ -24,8 +24,9 @@ async def test_workspace_path_reaches_real_server_unchanged(
     config = load_mcp_config(
         project_root / "config" / "mcp.json", workspace_root=workspace
     )
+    filesystem = next(server for server in config.servers if server.name == "filesystem")
     target = workspace / "hello.txt"
-    async with MCPClient(config.servers) as client:
+    async with MCPClient((filesystem,)) as client:
         result = await client.call_tool(
             "filesystem.write_file", {"path": str(target), "content": "hello"}
         )

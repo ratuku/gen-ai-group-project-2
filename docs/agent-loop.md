@@ -28,7 +28,8 @@ filesystem server's allowed directories, then lists the first allowed directory,
 then builds a readable final response from that returned listing. Both calls are
 real MCP calls. **The demo provider is deterministic, not a live LLM.** It supports
 only this task and requires a server named `filesystem` with the two listing tools.
-No file writes occur in this demo.
+No file writes occur in this demo. The CLI connects only the filesystem server for
+this workflow, so DeepWiki and internet access are not required.
 
 ```sh
 coding-assistant --demo-loop --task "inspect workspace"

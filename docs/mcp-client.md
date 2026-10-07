@@ -22,6 +22,29 @@ The smoke test discovers the server's tools, exercises directory listing plus
 file writing and reading, verifies the access boundary, and removes its temporary
 directory afterward.
 
+## External-resource server
+
+`config/mcp.json` also connects the hosted DeepWiki MCP server over Streamable
+HTTP. DeepWiki requires no local server installation or credentials and exposes
+tools for reading and asking questions about documentation generated from public
+GitHub repositories.
+
+Run the live integration check from the repository root:
+
+```powershell
+python scripts/smoke_external_mcp.py
+```
+
+The smoke test discovers the configured `deepwiki.*` tools, asks a concrete
+question about the public `modelcontextprotocol/python-sdk` repository, and prints
+the returned answer. It exits with a nonzero status if connection, discovery, or
+retrieval fails. The test requires internet access and depends on availability of
+the hosted DeepWiki service.
+
+Only send public repository names and non-sensitive questions to DeepWiki. Its
+responses are external, untrusted content and must not be treated as privileged
+instructions.
+
 ## Configuration
 
 Servers use the conventional `mcpServers` JSON object:

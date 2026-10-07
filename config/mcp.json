@@ -6,6 +6,10 @@
         "${configDir}/../node_modules/@modelcontextprotocol/server-filesystem/dist/index.js",
         "${workspaceRoot}"
       ]
+    },
+    "deepwiki": {
+      "url": "https://mcp.deepwiki.com/mcp",
+      "timeoutSeconds": 60
     }
   }
 }
