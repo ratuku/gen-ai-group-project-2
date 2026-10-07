@@ -10,7 +10,11 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "mcp>=2.3,<3",
+    "prompt-toolkit>=3.0.48,<4",
 ]
+
+[project.scripts]
+coding-assistant = "coding_assistant.cli.app:main"
 
 [project.optional-dependencies]
 rag = [
@@ -50,5 +54,7 @@ module = [
     "test_mcp_config",
     "test_filesystem_mcp_windows",
     "test_rag_preparation",
+    "test_cli",
+    "test_agent_loop",
 ]
 disallow_untyped_decorators = false
