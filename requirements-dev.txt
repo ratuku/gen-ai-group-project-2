@@ -1,4 +1,4 @@
--e .
+-e .[rag]
 mypy>=1.11,<2
 pytest>=8,<9
 pytest-asyncio>=0.24,<2

@@ -12,8 +12,23 @@ dependencies = [
     "mcp>=2.3,<3",
 ]
 
+[project.optional-dependencies]
+rag = [
+    "numpy>=1.26,<2.4",
+    "pypdf>=6,<7",
+    "fonttools>=4.50,<5",
+    "sentence-transformers>=5,<6",
+    "langchain-text-splitters>=0.3,<2",
+]
+
+[tool.setuptools.package-dir]
+"" = "src"
+rag_server = "rag_server"
+
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["src", "."]
+include = ["coding_assistant*", "rag_server*"]
+namespaces = false
 
 [tool.pytest.ini_options]
 addopts = "-q"
@@ -25,7 +40,7 @@ python_version = "3.11"
 strict = true
 follow_imports = "skip"
 mypy_path = "src"
-files = ["src", "tests"]
+files = ["src", "rag_server", "tests"]
 
 [[tool.mypy.overrides]]
 module = [
@@ -33,5 +48,6 @@ module = [
     "test_architecture",
     "test_mcp_client",
     "test_mcp_config",
+    "test_rag_preparation",
 ]
 disallow_untyped_decorators = false
