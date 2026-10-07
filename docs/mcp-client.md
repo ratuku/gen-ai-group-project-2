@@ -3,6 +3,25 @@
 Issue #2 provides the transport-neutral client used by later server-integration
 issues. It uses the official MCP Python SDK for stdio and Streamable HTTP transports.
 
+## Filesystem server
+
+`config/mcp.json` includes the official filesystem MCP server for the Windows
+demo. It is launched directly with `node` and pinned to version `2026.8.31`. Its only
+allowed directory is `${workspaceRoot}`, which the configuration loader expands
+to the repository root. The server therefore cannot read or modify sibling or
+parent directories.
+
+Node.js must be available on `PATH`; install the server first with `npm ci`. From the repository root, verify
+the real server and client together with:
+
+```powershell
+python scripts/smoke_filesystem_mcp.py
+```
+
+The smoke test discovers the server's tools, exercises directory listing plus
+file writing and reading, verifies the access boundary, and removes its temporary
+directory afterward.
+
 ## Configuration
 
 Servers use the conventional `mcpServers` JSON object:
@@ -25,7 +44,11 @@ Servers use the conventional `mcpServers` JSON object:
 ```
 
 The loader validates that each server defines exactly one transport and expands
-`${workspaceRoot}` without exposing unrelated process environment variables.
+`${workspaceRoot}` and `${configDir}` without exposing unrelated process environment
+variables. `${configDir}` is the directory containing the JSON configuration, so
+the installed server can be located independently of the allowed workspace.
+Launching the JavaScript entry point directly avoids `cmd.exe` and `npx.cmd`
+parsing of workspace characters such as `&`, `%`, and `^`.
 
 ## Usage
 

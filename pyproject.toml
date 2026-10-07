@@ -48,6 +48,7 @@ module = [
     "test_architecture",
     "test_mcp_client",
     "test_mcp_config",
+    "test_filesystem_mcp_windows",
     "test_rag_preparation",
 ]
 disallow_untyped_decorators = false

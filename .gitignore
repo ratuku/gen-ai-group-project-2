@@ -5,5 +5,5 @@
 .venv/
 __pycache__/
 *.egg-info/
-
+node_modules/
 rag_server/artifacts/
