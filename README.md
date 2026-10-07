@@ -5,7 +5,9 @@ abstraction, dynamically discovered MCP tools, and a custom RAG MCP server.
 
 ## Development setup
 
-Python 3.11 or newer is required.
+Python 3.11 or newer is required. The Windows filesystem MCP demo also requires
+Node.js with `npx` available on `PATH`. The first run downloads the pinned official
+filesystem server package.
 
 ```powershell
 python -m venv .venv
@@ -14,6 +16,22 @@ python -m pip install -r requirements-dev.txt
 pytest
 mypy
 ```
+
+## Filesystem MCP smoke test
+
+The committed MCP configuration starts the official filesystem server through
+`cmd /c npx` and grants it access only to this repository. Run the end-to-end
+smoke test from the repository root:
+
+```powershell
+python scripts/smoke_filesystem_mcp.py
+```
+
+The script displays the dynamically discovered `filesystem.*` tools, creates a
+temporary directory in the repository, writes and reads a file through MCP, and
+confirms that the server rejects access to the parent directory. Each successful
+step prints `PASS`; any failure exits with a nonzero status. Temporary files are
+removed even when a step fails.
 
 The provisional vertical-slice interfaces are exported from
 `coding_assistant.contracts`. The repository and runtime boundaries are documented in
