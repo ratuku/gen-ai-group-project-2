@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Sequence
+import sys
+from collections.abc import AsyncIterator, Mapping, Sequence
 from copy import deepcopy
+from pathlib import Path
 
 import pytest
 
 from coding_assistant.agent import BasicAgentLoop
+from coding_assistant.config import ServerConfig
 from coding_assistant.contracts import AgentLoop, Payload
+from coding_assistant.mcp import MCPClient as ConcreteMCPClient
 
 
 class FakeMCPClient:
@@ -15,8 +19,16 @@ class FakeMCPClient:
         self.calls: list[tuple[str, Payload]] = []
 
     async def list_tools(self) -> Sequence[Payload]:
-        return [{"name": "filesystem.list_directory", "input_schema": {"type": "object"}},
-                {"name": "filesystem.read_text_file", "input_schema": {"type": "object"}}]
+        path_schema = {
+            "type": "object",
+            "properties": {"path": {"type": "string"}},
+            "required": ["path"],
+            "additionalProperties": False,
+        }
+        return [
+            {"name": "filesystem.list_directory", "input_schema": path_schema},
+            {"name": "filesystem.read_text_file", "input_schema": path_schema},
+        ]
 
     async def call_tool(self, name: str, arguments: Payload) -> Payload:
         self.calls.append((name, arguments))
@@ -123,7 +135,46 @@ async def test_tool_failure_is_available_to_model(raises: bool) -> None:
     ])
     events = [event async for event in BasicAgentLoop(provider, FailingClient()).run("Read file")]
     assert "permission denied" in str(provider.requests[1][0][-1]["content"])
-    assert any(event.get("is_error") for event in events if event["type"] == "tool_result")
+    result = next(event for event in events if event["type"] == "tool_result")
+    assert result["is_error"] is True
+    if raises:
+        assert result["error_code"] == "tool_invocation_failed"
+    else:
+        assert "error_code" not in result
+    assert events[-1]["reason"] == "answered"
+
+
+@pytest.mark.parametrize(
+    ("requested_tool", "arguments", "error_code"),
+    [
+        ("filesystem.not_discovered", {"path": "."}, "unknown_tool"),
+        ("filesystem.read_text_file", {"path": 42}, "invalid_arguments"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_rejected_tool_request_is_available_to_model(
+    requested_tool: str, arguments: Payload, error_code: str,
+) -> None:
+    provider = ScriptedProvider([
+        [{"type": "tool_call", "id": "rejected_call", "name": requested_tool,
+          "arguments": arguments}],
+        [{"type": "text", "content": f"The tool failed with {error_code}."}],
+    ])
+    client = FakeMCPClient()
+
+    events = [event async for event in BasicAgentLoop(provider, client).run("Use a tool")]
+
+    assert not client.calls
+    result = next(event for event in events if event["type"] == "tool_result")
+    assert result["tool_call_id"] == "rejected_call"
+    assert result["name"] == requested_tool
+    assert result["is_error"] is True
+    assert result["error_code"] == error_code
+    tool_message = provider.requests[1][0][-1]
+    assert tool_message["role"] == "tool"
+    assert tool_message["tool_call_id"] == "rejected_call"
+    assert isinstance(tool_message["content"], Mapping)
+    assert tool_message["content"]["error_code"] == error_code
     assert events[-1]["reason"] == "answered"
 
 
@@ -159,6 +210,60 @@ async def test_provider_exception_and_later_task_recovery() -> None:
 def test_invalid_iteration_limit(limit: int) -> None:
     with pytest.raises(ValueError):
         BasicAgentLoop(ScriptedProvider([]), FakeMCPClient(), max_iterations=limit)
+
+
+@pytest.mark.asyncio
+async def test_model_uses_result_from_real_stdio_echo_tool() -> None:
+    class EchoResultProvider:
+        def __init__(self) -> None:
+            self.requests: list[tuple[Sequence[Payload], Sequence[Payload]]] = []
+
+        async def stream(
+            self, messages: Sequence[Payload], tools: Sequence[Payload],
+        ) -> AsyncIterator[Payload]:
+            self.requests.append((deepcopy(messages), deepcopy(tools)))
+            if len(self.requests) == 1:
+                yield {
+                    "type": "tool_call",
+                    "id": "echo_call",
+                    "name": "fixture.echo",
+                    "arguments": {"value": "hello MCP"},
+                }
+                yield {"type": "completed"}
+                return
+
+            result = messages[-1].get("content")
+            if not isinstance(result, Mapping):
+                raise AssertionError("Expected the tool result in model context")
+            structured = result.get("structured_content")
+            if not isinstance(structured, Mapping):
+                raise AssertionError("Expected structured MCP content")
+            value = structured.get("result")
+            if not isinstance(value, str):
+                raise AssertionError("Expected a string echo result")
+            yield {"type": "text", "content": f"Echo returned: {value}"}
+            yield {"type": "completed"}
+
+    server_script = Path(__file__).parent / "fixtures" / "echo_mcp_server.py"
+    client = ConcreteMCPClient((ServerConfig(
+        name="fixture", command=sys.executable, args=(str(server_script),),
+    ),))
+    provider = EchoResultProvider()
+
+    async with client:
+        agent = BasicAgentLoop(provider, client)
+        events = [event async for event in agent.run("Echo hello MCP")]
+
+    assert provider.requests[0][1][0]["name"] == "fixture.echo"
+    assert "hello MCP" in str(provider.requests[1][0][-1]["content"])
+    assert [event["type"] for event in events
+            if event["type"] not in {"status", "completed"}] == [
+        "tool_call", "tool_result", "text",
+    ]
+    assert agent.messages[-1] == {
+        "role": "assistant", "content": "Echo returned: hello MCP",
+    }
+    assert events[-1] == {"type": "completed", "reason": "answered", "iterations": 2}
 
 
 @pytest.mark.asyncio

@@ -13,7 +13,7 @@ project-root/
 |   |-- agent/        # reason-act-observe coordination
 |   |-- providers/    # Ollama and cloud-provider adapters
 |   |-- mcp/          # MCP client, discovery, and tool invocation
-|   |-- execution/    # confirmation and automatic execution policy
+|   |-- execution/    # tool discovery, schema validation, and dispatch
 |   |-- config/       # application configuration code
 |   `-- contracts/    # three provisional vertical-slice Protocols
 |-- rag_server/
@@ -54,10 +54,12 @@ settings. Top-level `config` contains deployment/runtime files such as `mcp.json
 ## First vertical slice
 
 1. The CLI passes a natural-language task to `AgentLoop.run`.
-2. The agent asks `MCPClient.list_tools` for normalized tool definitions.
+2. The tool dispatcher asks `MCPClient.list_tools` for normalized definitions and
+   compiles their argument-schema validators.
 3. The agent passes conversation messages and tools to `ModelProvider.stream`.
 4. The provider emits a filesystem tool request.
-5. The agent calls `MCPClient.call_tool` and feeds the normalized result back to the
+5. The dispatcher validates the exact tool name and arguments, calls
+   `MCPClient.call_tool`, and the agent feeds the normalized result back to the
    provider.
 6. The provider emits a final response and the agent streams it to the CLI.
 

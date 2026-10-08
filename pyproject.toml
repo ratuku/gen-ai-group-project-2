@@ -9,6 +9,7 @@ description = "An autonomous CLI coding assistant built around MCP tools"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "jsonschema>=4.20,<5",
     "mcp>=2.3,<3",
     "prompt-toolkit>=3.0.48,<4",
 ]
