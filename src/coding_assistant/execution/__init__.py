@@ -1,1 +1,5 @@
-"""Tool approval and execution policy."""
+"""Tool discovery, validation, and execution dispatch."""
+
+from .dispatcher import ToolDispatcher
+
+__all__ = ["ToolDispatcher"]

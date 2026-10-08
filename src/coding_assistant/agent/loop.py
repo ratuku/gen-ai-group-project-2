@@ -8,14 +8,15 @@ from copy import deepcopy
 from uuid import uuid4
 
 from coding_assistant.contracts import MCPClient, ModelProvider, Payload
+from coding_assistant.execution import ToolDispatcher
 
 
 class BasicAgentLoop:
-    """Own conversation state; use the existing MCP client for tool invocation.
+    """Own conversation state and dispatch model-requested MCP tools.
 
     Provider adapters translate their native responses into complete ``text`` and
-    ``tool_call`` events. Tool names/schema validation and execution policy belong
-    to the later dispatcher ticket; this loop only checks the event envelope.
+    ``tool_call`` events. The dispatcher validates names and arguments against the
+    exact tool snapshot supplied to the provider before invoking MCP.
     """
 
     def __init__(
@@ -25,6 +26,7 @@ class BasicAgentLoop:
             raise ValueError("max_iterations must be a positive integer")
         self.provider = provider
         self.mcp_client = mcp_client
+        self.dispatcher = ToolDispatcher(mcp_client)
         self.max_iterations = max_iterations
         self._messages: list[Payload] = []
         self._running = False
@@ -43,7 +45,7 @@ class BasicAgentLoop:
         self._messages.append({"role": "user", "content": task.strip()})
         pending: list[Payload] = []
         try:
-            tools = await self.mcp_client.list_tools()
+            tools = await self.dispatcher.discover()
             for iteration in range(1, self.max_iterations + 1):
                 yield {"type": "status", "content": f"Model step {iteration}/{self.max_iterations}"}
                 text_parts: list[str] = []
@@ -84,10 +86,7 @@ class BasicAgentLoop:
                     arguments = call["arguments"]
                     assert isinstance(arguments, Mapping)
                     yield {"type": "tool_call", **call}
-                    try:
-                        result = await self.mcp_client.call_tool(name, arguments)
-                    except Exception as error:
-                        result = {"type": "tool_result", "name": name, "is_error": True, "content": str(error)}
+                    result = await self.dispatcher.execute(name, arguments)
                     # Keep the complete result (including structured content and error
                     # flags) available to the next model request.
                     self._messages.append({

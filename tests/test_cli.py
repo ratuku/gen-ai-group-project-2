@@ -264,8 +264,28 @@ async def test_scripted_cli_demo_uses_loop_and_honors_limit(
     }}), encoding="utf-8")
     class FilesystemDemoClient(FakeClient):
         async def list_tools(self) -> list[Payload]:
-            return [{"name": f"filesystem.{name}", "server": "filesystem", "server_tool_name": name}
-                    for name in ("list_allowed_directories", "list_directory")]
+            return [
+                {
+                    "name": "filesystem.list_allowed_directories",
+                    "server": "filesystem",
+                    "server_tool_name": "list_allowed_directories",
+                    "input_schema": {
+                        "type": "object",
+                        "additionalProperties": False,
+                    },
+                },
+                {
+                    "name": "filesystem.list_directory",
+                    "server": "filesystem",
+                    "server_tool_name": "list_directory",
+                    "input_schema": {
+                        "type": "object",
+                        "properties": {"path": {"type": "string"}},
+                        "required": ["path"],
+                        "additionalProperties": False,
+                    },
+                },
+            ]
         async def call_tool(self, name: str, arguments: Payload) -> Payload:
             if name.endswith("list_allowed_directories"):
                 content = f"Allowed directories:\n{tmp_path}"

@@ -3,10 +3,12 @@
 `BasicAgentLoop` implements the existing `AgentLoop.run(task)` contract. It owns
 conversation history and repeatedly asks a `ModelProvider` what to do next:
 
-1. Append the user's task and discover MCP tool definitions.
+1. Append the user's task and discover MCP tool definitions through the tool
+   dispatcher.
 2. Send the history and tool definitions to `provider.stream(messages, tools)`.
 3. Collect the assistant's text and complete tool-call events.
-4. Invoke requested tools sequentially through the existing `MCPClient.call_tool`.
+4. Validate requested tool names and arguments, then invoke valid calls
+   sequentially through the existing `MCPClient.call_tool`.
 5. Append all tool results, including structured content and error flags, and
    request the next model turn.
 6. Finish with the model's nonempty final response, or report the iteration limit.
@@ -82,19 +84,34 @@ interruption result so later requests do not inherit unmatched calls. Concurrent
 tasks on one agent are rejected. History trimming and durable session storage are
 not included in this basic version.
 
-## Scope of the later tool-execution ticket
+## Tool discovery and dispatch
 
-This loop uses the existing MCP client directly to make the cycle functional.
-It only checks basic event shape (name, arguments object, call ID). It does not
-implement JSON Schema validation, argument coercion, a new dispatcher, or approval
-policy. Those belong to the later tool-execution ticket. A custom live provider
-should not be treated as having execution safeguards that are not yet implemented.
+At the start of each task, `ToolDispatcher.discover` obtains the normalized MCP
+tool definitions and atomically builds a registry keyed by each exact discovered
+tool name. It checks every input schema and compiles the appropriate JSON Schema
+validator before the definitions are exposed to the model. Duplicate names,
+malformed definitions, and invalid schemas fail discovery rather than leaving a
+partially refreshed registry.
+
+For each requested call, the dispatcher requires an exact name match and validates
+the argument object without coercing values or inserting schema defaults. Unknown
+tools and invalid arguments are not sent to MCP. Instead, they become model-visible
+tool results with `is_error=true` and the stable error codes `unknown_tool` and
+`invalid_arguments`. An MCP invocation exception similarly becomes
+`tool_invocation_failed`; server-returned error results are preserved. These
+recoverable results are added to history so the model can correct its request or
+explain the failure. Cancellation propagates and calls are not retried.
+
+The dispatcher validates and routes calls; it does not decide whether a valid call
+requires user approval or may run automatically. Confirmation and automatic-mode
+execution policy remain the scope of issue #13.
 
 ## Verification
 
-Unit tests cover sequential and multiple tool calls, results in model context,
-cross-task state, streaming final answers, iteration limits, tool/provider errors,
-and cancellation. The CLI integration test runs this loop against two real local
-echo MCP servers with a scripted provider. It checks both results reach the
-provider before the final answer and both connections close afterward. This tests
-the loop contract; it does not evaluate live-model planning quality.
+Unit tests cover dispatcher discovery, strict argument validation, exact-name
+routing, model-visible failures, sequential and multiple tool calls, results in
+model context, cross-task state, streaming final answers, iteration limits, and
+cancellation. The integration test runs the loop against a real local echo MCP
+server with a scripted provider and verifies that a discovered tool is invoked and
+its result is used in the final answer. This tests the loop contract; it does not
+evaluate live-model planning quality.
