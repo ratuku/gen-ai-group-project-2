@@ -52,14 +52,14 @@ def test_empty_server_object_is_valid_during_incremental_setup(tmp_path: Path) -
     assert load_mcp_config(config_path, workspace_root=tmp_path).servers == ()
 
 
-def test_committed_filesystem_server_uses_workspace_root() -> None:
+def test_committed_servers_configure_filesystem_and_external_resource() -> None:
     project_root = Path(__file__).resolve().parents[1]
 
     config = load_mcp_config(project_root / "config" / "mcp.json")
 
     assert config.workspace_root == project_root
-    assert len(config.servers) == 1
-    filesystem = config.servers[0]
+    assert len(config.servers) == 2
+    filesystem, deepwiki = config.servers
     assert filesystem.name == "filesystem"
     assert filesystem.command == "node"
     assert filesystem.args == (
@@ -68,6 +68,10 @@ def test_committed_filesystem_server_uses_workspace_root() -> None:
         str(project_root),
     )
     assert filesystem.cwd == project_root
+    assert deepwiki.name == "deepwiki"
+    assert deepwiki.transport == "http"
+    assert deepwiki.url == "https://mcp.deepwiki.com/mcp"
+    assert deepwiki.timeout_seconds == 60
 
 
 @pytest.mark.parametrize(

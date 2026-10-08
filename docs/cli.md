@@ -12,11 +12,15 @@ coding-assistant
 `python -m coding_assistant.cli` is an equivalent launch command if the console
 script is not on PATH. Node.js is needed for the configured filesystem server.
 
-The CLI connects to all servers in `config/mcp.json`, discovers their tools, and
-prints each connected server and its tool count. The current config contains only
-the filesystem server. When the external MCP server is added to the config, the
-same command will connect to both; no CLI changes are needed. A server connection
-failure produces an error and a nonzero exit, not a successful connection banner.
+The normal CLI connects to all servers in `config/mcp.json`, discovers their tools,
+and prints each connected server and its tool count. The current config contains
+the filesystem and hosted DeepWiki servers, so normal CLI use requires internet
+access. A server connection failure produces an error and a nonzero exit, not a
+successful connection banner.
+
+`--demo-loop` intentionally selects only the filesystem server. This keeps the
+scripted workspace demonstration independent of DeepWiki and internet availability
+while normal CLI and custom-agent modes retain access to every configured server.
 
 ## Demo commands
 

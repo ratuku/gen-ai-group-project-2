@@ -45,11 +45,17 @@ def _require_success(step: str, result: Payload) -> None:
 async def _run() -> None:
     project_root = Path(__file__).resolve().parents[1]
     config = load_mcp_config(project_root / "config" / "mcp.json")
+    try:
+        filesystem = next(
+            server for server in config.servers if server.name == "filesystem"
+        )
+    except StopIteration as exc:
+        raise RuntimeError("Filesystem MCP server is not configured") from exc
     smoke_dir = project_root / f".filesystem-mcp-smoke-{uuid4().hex}"
     smoke_file = smoke_dir / "hello.txt"
 
     try:
-        async with MCPClient(config.servers) as client:
+        async with MCPClient((filesystem,)) as client:
             tools = await client.list_tools()
             tool_names = {str(tool["name"]) for tool in tools}
             print("Discovered filesystem tools:")

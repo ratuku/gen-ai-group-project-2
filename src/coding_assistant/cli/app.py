@@ -136,16 +136,24 @@ async def run_cli(
     agent_factory: AgentFactory | None = None,
 ) -> int:
     config = load_mcp_config(options.config, workspace_root=options.workspace)
+    scripted_demo = options.demo_loop and agent_factory is None
+    server_configs = config.servers
+    if scripted_demo:
+        server_configs = tuple(
+            server for server in config.servers if server.name == "filesystem"
+        )
+        if not server_configs:
+            raise ValueError("--demo-loop requires a configured filesystem MCP server")
     factory = agent_factory or (load_agent_factory(options.agent) if options.agent else ConnectionDemoAgent)
-    async with MCPClient(config.servers) as client:
+    async with MCPClient(server_configs) as client:
         tools = await client.list_tools()
         print(f"Connected to {len(client.connected_servers)} MCP server(s):", file=output)
         for name in client.connected_servers:
             count = sum(tool.get("server") == name for tool in tools)
             print(f"  {name}: {count} tool(s)", file=output)
-        if not config.servers:
+        if not server_configs:
             print("No MCP servers configured. Add servers to your --config file.", file=output)
-        if options.demo_loop and agent_factory is None:
+        if scripted_demo:
             print("Scripted agent-loop demo; real MCP calls, no live LLM.", file=output)
             agent: AgentLoop = BasicAgentLoop(WorkspaceDemoProvider(), client, max_iterations=options.max_iterations)
         else:
