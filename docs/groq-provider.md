@@ -5,11 +5,10 @@ the CLI, agent loop, MCP client, or tool dispatcher. It streams text, assembles
 fragmented function calls, preserves tool-call IDs, and sends complete MCP results
 back to the cloud model on the next turn.
 
-## Free account and API key
+## API key
 
-Groq Cloud provides a rate-limited Free plan. A payment method is required only if
-you choose to upgrade to a paid tier. Current limits and model availability can
-change, so check the official [Groq rate-limit documentation](https://console.groq.com/docs/rate-limits).
+Current limits and model availability can change, so check the official
+[Groq rate-limit documentation](https://console.groq.com/docs/rate-limits).
 
 1. Create or sign in to a Groq Cloud account.
 2. Create an API key in the Groq Console.
@@ -27,8 +26,8 @@ repository does not contain or load a committed key file.
 
 ## Model configuration
 
-The default is `openai/gpt-oss-20b`, a tool-capable model currently listed under
-Groq's Free plan limits. Override it when another enabled model is preferred:
+The default is `openai/gpt-oss-20b`, a tool-capable model. Override it when another
+enabled model is preferred:
 
 ```powershell
 $env:GROQ_MODEL = "openai/gpt-oss-20b"
@@ -84,7 +83,7 @@ assembles and validates a complete object before emitting the provider-neutral
 
 - **Missing key:** set `GROQ_API_KEY` in the same terminal used to start the CLI.
 - **Authentication failure:** create an active key and replace the environment value.
-- **Rate limit:** wait for the Free plan limit to reset, then retry.
+- **Rate limit:** wait for the service limit to reset, then retry.
 - **Model unavailable:** set `GROQ_MODEL` to a tool-capable model enabled for the
   account.
 - **Connection failure:** confirm internet access and Groq service availability.

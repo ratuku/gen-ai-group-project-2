@@ -410,7 +410,7 @@ def _status_error_message(error: APIStatusError, model: str) -> str:
         )
     if error.status_code == 429:
         return (
-            "Groq Free plan rate limit reached. Wait for the limit to reset and "
+            "Groq rate limit reached. Wait for the limit to reset and "
             f"try again. Details: {detail}"
         )
     return f"Groq request failed with status {error.status_code}: {detail}"
