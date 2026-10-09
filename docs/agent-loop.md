@@ -55,12 +55,13 @@ def create_agent(client):
     return BasicAgentLoop(provider, client, max_iterations=8)
 ```
 
-The project includes an Ollama implementation and factory. After setting
-`OLLAMA_MODEL`, select it with
-`--agent coding_assistant.providers.ollama:create_agent`. See
-[Ollama provider](ollama-provider.md) for installation, configuration, and live
-examples. Cloud providers remain separate work. The CLI's `--max-iterations`
-configures only the built-in demo; a custom factory configures its own agent.
+The project includes Ollama and Groq Cloud implementations. Select them with
+`--agent coding_assistant.providers.ollama:create_agent` or
+`--agent coding_assistant.providers.groq:create_agent` after setting their required
+environment variables. See [Ollama provider](ollama-provider.md) and
+[Groq Cloud provider](groq-provider.md) for setup and live examples. The CLI's
+`--max-iterations` configures only the built-in demo; a custom factory configures
+its own agent.
 
 ## Provider event and history contract
 

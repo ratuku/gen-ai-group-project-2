@@ -34,7 +34,8 @@ labeled scripted provider and real filesystem calls. Live model-backed coding
 tasks use the Ollama provider wired through `--agent`.
 See [CLI demo and agent integration](docs/cli.md) and
 [Basic agent loop](docs/agent-loop.md) for options and demo commands. See
-[Ollama provider](docs/ollama-provider.md) for local model setup and live usage.
+[Ollama provider](docs/ollama-provider.md) for local model setup and
+[Groq Cloud provider](docs/groq-provider.md) for rate-limited free cloud usage.
 
 ## Ollama provider
 
@@ -50,6 +51,22 @@ coding-assistant --agent coding_assistant.providers.ollama:create_agent
 The adapter streams text and supports MCP tool calls through the provider-neutral
 agent interface. It does not download models automatically. `OLLAMA_HOST` may be
 set when the Ollama service is not available at its default local endpoint.
+
+## Groq Cloud provider
+
+Groq Cloud provides a rate-limited Free plan. Create an API key, keep it out of Git,
+and select the cloud adapter through the same agent interface:
+
+```powershell
+$env:GROQ_API_KEY = "your-key"
+$env:GROQ_MODEL = "openai/gpt-oss-20b"  # Optional; this is the default.
+coding-assistant --agent coding_assistant.providers.groq:create_agent
+```
+
+The provider streams responses and preserves MCP tool calls and results across
+model turns. Prompts, tool definitions, and returned tool results are sent to Groq
+Cloud. See [Groq Cloud provider](docs/groq-provider.md) for setup, current Free plan
+links, security guidance, and troubleshooting.
 
 ## Filesystem MCP smoke test
 

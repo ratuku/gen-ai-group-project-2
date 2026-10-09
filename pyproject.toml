@@ -9,6 +9,7 @@ description = "An autonomous CLI coding assistant built around MCP tools"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "groq>=1.7,<2",
     "jsonschema>=4.20,<5",
     "mcp>=2.3,<3",
     "ollama>=0.6.3,<0.7",
@@ -54,6 +55,7 @@ module = [
     "test_architecture",
     "test_mcp_client",
     "test_mcp_config",
+    "test_groq_provider",
     "test_ollama_provider",
     "test_filesystem_mcp_windows",
     "test_rag_preparation",
