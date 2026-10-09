@@ -11,6 +11,7 @@ requires-python = ">=3.11"
 dependencies = [
     "jsonschema>=4.20,<5",
     "mcp>=2.3,<3",
+    "ollama>=0.6.3,<0.7",
     "prompt-toolkit>=3.0.48,<4",
 ]
 
@@ -53,6 +54,7 @@ module = [
     "test_architecture",
     "test_mcp_client",
     "test_mcp_config",
+    "test_ollama_provider",
     "test_filesystem_mcp_windows",
     "test_rag_preparation",
     "test_cli",

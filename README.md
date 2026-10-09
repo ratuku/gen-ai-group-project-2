@@ -31,9 +31,25 @@ Install the project and run `npm ci` first, as shown above. Use `/servers`, `/to
 `/help`, and `/exit` at the prompt. The default mode demonstrates live MCP connections
 and tool discovery. `--demo-loop` exercises the stateful agent loop with a clearly
 labeled scripted provider and real filesystem calls. Live model-backed coding
-tasks require a provider wired through `--agent`.
+tasks use the Ollama provider wired through `--agent`.
 See [CLI demo and agent integration](docs/cli.md) and
-[Basic agent loop](docs/agent-loop.md) for options and demo commands.
+[Basic agent loop](docs/agent-loop.md) for options and demo commands. See
+[Ollama provider](docs/ollama-provider.md) for local model setup and live usage.
+
+## Ollama provider
+
+Install and start Ollama, pull a tool-capable model, and select it through the
+environment before launching the existing agent loop:
+
+```powershell
+ollama pull qwen3
+$env:OLLAMA_MODEL = "qwen3"
+coding-assistant --agent coding_assistant.providers.ollama:create_agent
+```
+
+The adapter streams text and supports MCP tool calls through the provider-neutral
+agent interface. It does not download models automatically. `OLLAMA_HOST` may be
+set when the Ollama service is not available at its default local endpoint.
 
 ## Filesystem MCP smoke test
 

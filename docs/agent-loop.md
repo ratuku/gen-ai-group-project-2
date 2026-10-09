@@ -51,13 +51,16 @@ factory in an importable module and select it with `--agent module:create_agent`
 from coding_assistant.agent import BasicAgentLoop
 
 def create_agent(client):
-    provider = ...  # Your implementation of the ModelProvider protocol.
+    provider = ...  # Any implementation of the ModelProvider protocol.
     return BasicAgentLoop(provider, client, max_iterations=8)
 ```
 
-This example is an integration sketch, not a configured provider. Ollama and cloud
-provider adapters remain separate work. The CLI's `--max-iterations` configures
-only the built-in demo; a custom factory configures its own agent.
+The project includes an Ollama implementation and factory. After setting
+`OLLAMA_MODEL`, select it with
+`--agent coding_assistant.providers.ollama:create_agent`. See
+[Ollama provider](ollama-provider.md) for installation, configuration, and live
+examples. Cloud providers remain separate work. The CLI's `--max-iterations`
+configures only the built-in demo; a custom factory configures its own agent.
 
 ## Provider event and history contract
 
