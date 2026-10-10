@@ -1,4 +1,4 @@
-# CLI usage
+# Juniper CLI usage
 
 Run these commands from the repository root in Windows PowerShell. Python 3.11+
 and Node.js are required. The CLI itself does not need a GPU.
@@ -8,7 +8,7 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e .
 npm.cmd ci
 .\.venv\Scripts\coding-assistant.exe --help
-.\.venv\Scripts\coding-assistant.exe
+.\.venv\Scripts\coding-assistant.exe --connection-demo
 ```
 
 `.\.venv\Scripts\python.exe -m coding_assistant.cli` is an equivalent launch
@@ -25,29 +25,42 @@ successful connection banner.
 scripted workspace demonstration independent of DeepWiki and internet availability
 while normal CLI and custom-agent modes retain access to every configured server.
 
+## Terminal display
+
+Juniper shows the workspace, provider, model, connected-server count, version, and
+current execution behavior in its startup panel. Model text streams as it arrives.
+Tool panels show the qualified tool name and its arguments; result panels show
+the returned content. Long results show the first 16 lines in the terminal while
+the complete result remains available to the model. `/tools` shows a tool table.
+
+Captured single-task output uses plain labels. Set `NO_COLOR` to disable colors.
+The current execution behavior is automatic; confirmation mode is separate work
+in issue #13 and is not advertised as implemented.
+
 ## Demo commands
 
 ```text
-you> /servers
-you> /tools
-you> list tools
-you> list servers
-you> /help
-you> /exit
+juniper> /servers
+juniper> /tools
+juniper> list tools
+juniper> list servers
+juniper> /help
+juniper> /exit
 ```
 
-By default, the CLI explicitly runs a connection-only demo.
+The default CLI runs the real Groq agent. Use `--connection-demo` to explicitly
+select connection discovery without an LLM.
 Use `.\.venv\Scripts\coding-assistant.exe --demo-loop` to exercise the basic agent cycle with a
 scripted provider and real filesystem calls; see [Basic agent loop](agent-loop.md).
-`list tools` and `list servers` pass through a small demo adapter implementing the
+In `--connection-demo`, `list tools` and `list servers` pass through a small adapter implementing the
 existing `AgentLoop.run(task)` interface. Other coding tasks report that an agent
 loop is required; this mode does not invoke an LLM or execute filesystem actions.
 
 For one task followed by exit:
 
 ```powershell
-.\.venv\Scripts\coding-assistant.exe --task "list tools"
-.\.venv\Scripts\coding-assistant.exe --config .\config\mcp.json --workspace . --task "list servers"
+.\.venv\Scripts\coding-assistant.exe --connection-demo --task "list tools"
+.\.venv\Scripts\coding-assistant.exe --connection-demo --config .\config\mcp.json --workspace . --task "list servers"
 .\.venv\Scripts\coding-assistant.exe --demo-loop --task "inspect workspace"
 ```
 
@@ -72,7 +85,7 @@ input keeps the key out of command history:
 
 ```powershell
 $env:GROQ_API_KEY = Read-Host "Groq API key" -MaskInput
-.\.venv\Scripts\coding-assistant.exe --agent coding_assistant.providers.groq:create_agent
+.\.venv\Scripts\coding-assistant.exe --provider groq
 ```
 
 The live-provider prompt says `Enter a task.`; demo modes show their supported
@@ -80,7 +93,7 @@ example task. For a single model-backed task:
 
 ```powershell
 .\.venv\Scripts\coding-assistant.exe `
-  --agent coding_assistant.providers.groq:create_agent `
+  --provider groq `
   --workspace . `
   --task "List the top-level project files using the filesystem tool."
 ```
@@ -98,7 +111,7 @@ $cliTestConfig = Join-Path ([IO.Path]::GetTempPath()) "coding-assistant-empty-mc
 [IO.File]::WriteAllText($cliTestConfig, '{"mcpServers": {}}')
 .\.venv\Scripts\coding-assistant.exe `
   --config $cliTestConfig `
-  --agent coding_assistant.providers.groq:create_agent `
+  --provider groq `
   --task "Reply with one short greeting."
 ```
 
@@ -108,6 +121,10 @@ for that configuration's location. This avoids connecting to DeepWiki. Pass
 `--workspace` with the sample directory. Do not commit or print the API key.
 
 ## Agent-loop integration
+
+Use `--provider groq` (the default) or `--provider ollama` for the shipped adapters.
+Ollama requires `OLLAMA_MODEL`; Groq requires `GROQ_API_KEY`, with optional
+`GROQ_MODEL`. Providers, custom factories, and demo modes are mutually exclusive.
 
 The CLI owns input, output, and MCP connection cleanup. The agent and provider components
 own model requests and reasoning; execution approval policy belongs to the later
@@ -150,7 +167,17 @@ for environment-based model configuration.
 Tests cover prompt input, commands, streamed results, failures, EOF/Ctrl+C cleanup,
 one-shot mode, and the agent factory. An integration test starts two real local
 stdio echo MCP servers, calls both through an injected test agent, and verifies
-disconnection. These are test fixtures, not the future external production server.
+disconnection. These local test fixtures are separate from the configured hosted
+DeepWiki server.
+
+DeepWiki reads documentation and answers questions about specific public GitHub
+repositories. Include a repository in `owner/repo` format in your task, for example:
+
+```text
+Use DeepWiki to explain the architecture of modelcontextprotocol/python-sdk.
+```
+
+The server name `deepwiki` is not a valid repository name.
 
 See the [issue #8 verification record](cli-verification.md) for the automated and
 live Windows/Groq checks performed on October 10, 2026.
