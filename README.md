@@ -1,4 +1,4 @@
-# CLI Coding Assistant
+# Juniper - CLI Coding Assistant
 
 This project builds an autonomous command-line coding assistant with model-provider
 abstraction, dynamically discovered MCP tools, and a custom RAG MCP server.
@@ -22,16 +22,19 @@ mypy
 
 ```sh
 coding-assistant --help
-coding-assistant
-coding-assistant --task "list tools"
+coding-assistant --provider groq
+coding-assistant --provider groq --task "List the top-level project files using the filesystem tool."
+coding-assistant --connection-demo --task "list tools"
 coding-assistant --demo-loop --task "inspect workspace"
 ```
 
 Install the project and run `npm ci` first, as shown above. Use `/servers`, `/tools`,
-`/help`, and `/exit` at the prompt. The default mode demonstrates live MCP connections
-and tool discovery. `--demo-loop` exercises the stateful agent loop with a clearly
+`/help`, and `/exit` at the prompt. The default mode runs the Groq-backed agent;
+set `GROQ_API_KEY` before launching it. `--provider ollama` selects the local provider
+after setting `OLLAMA_MODEL`. `--connection-demo` demonstrates MCP connections and
+tool discovery without an LLM. `--demo-loop` exercises the stateful agent loop with a clearly
 labeled scripted provider and real filesystem calls. Live model-backed coding
-tasks use the Ollama provider wired through `--agent`.
+tasks use the selected provider through the shared agent loop.
 See [CLI demo and agent integration](docs/cli.md) and
 [Basic agent loop](docs/agent-loop.md) for options and demo commands. See
 [Ollama provider](docs/ollama-provider.md) for local model setup and
