@@ -163,8 +163,13 @@ async def run_cli(
         if options.task is not None:
             return await display_task(agent, options.task.strip(), output)
 
-        hint = "inspect workspace" if options.demo_loop else "list tools"
-        print(f"Enter a task (demo: '{hint}'). " + HELP, file=output, flush=True)
+        if scripted_demo:
+            greeting = "Enter a task (demo: 'inspect workspace'). "
+        elif options.agent is None and agent_factory is None:
+            greeting = "Enter a task (demo: 'list tools'). "
+        else:
+            greeting = "Enter a task. "
+        print(greeting + HELP, file=output, flush=True)
         if read_prompt is None:
             session: PromptSession[str] = PromptSession()
             read_prompt = session.prompt_async

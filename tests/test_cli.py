@@ -43,6 +43,10 @@ class RecordingAgent:
         self.tasks.append(task)
         if task == "fail":
             raise RuntimeError("Task failed")
+        if task == "error":
+            yield {"type": "error", "content": "Provider unavailable"}
+            yield {"type": "completed"}
+            return
         yield {"type": "text", "content": "Hello "}
         yield {"type": "text", "content": task}
         yield {"type": "tool_call", "name": "filesystem.read_file"}
@@ -63,7 +67,7 @@ async def test_prompt_tasks_commands_and_exit_close_connections(
     config: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(app, "MCPClient", FakeClient)
-    inputs = iter([" ", "/help", "/servers", "/tools", "/unknown", "fail", "read README", "/exit"])
+    inputs = iter([" ", "/help", "/servers", "/tools", "/unknown", "fail", "error", "read README", "/exit"])
     async def read_prompt(prompt: str) -> str:
         return next(inputs)
     agent = RecordingAgent()
@@ -73,12 +77,13 @@ async def test_prompt_tasks_commands_and_exit_close_connections(
         read_prompt=read_prompt, agent_factory=lambda client: agent,
     )
     assert result == 0
-    assert agent.tasks == ["fail", "read README"]
+    assert agent.tasks == ["fail", "error", "read README"]
     text = output.getvalue()
     assert "Connected to 2 MCP server(s)" in text
     assert "external.search" in text
     assert "Unknown command" in text
     assert "[Error] Task failed" in text
+    assert "[Error] Provider unavailable\n[Failed]" in text
     assert "Hello read README\n[Tool] filesystem.read_file" in text
     assert "file contents" in text
     assert "[Done]" in text
@@ -202,6 +207,124 @@ def test_blank_task_rejected() -> None:
     with pytest.raises(SystemExit) as error:
         app.parse_arguments(["--task", "  "])
     assert error.value.code == 2
+
+
+@pytest.mark.parametrize("arguments", [
+    ["--unknown"], ["--max-iterations", "0"],
+    ["--max-iterations", "not-a-number"],
+    ["--demo-loop", "--agent", "example:create_agent"],
+])
+def test_invalid_arguments_exit_with_usage_error(arguments: list[str]) -> None:
+    with pytest.raises(SystemExit) as error:
+        app.main(arguments)
+    assert error.value.code == 2
+
+
+@pytest.mark.parametrize("command", ["/exit", "/quit", "exit", "quit"])
+@pytest.mark.asyncio
+async def test_exit_aliases_close_connections(
+    config: Path, monkeypatch: pytest.MonkeyPatch, command: str,
+) -> None:
+    monkeypatch.setattr(app, "MCPClient", FakeClient)
+    async def read_prompt(prompt: str) -> str:
+        return command
+    output = io.StringIO()
+    assert await app.run_cli(
+        app.parse_arguments(["--config", str(config)]),
+        output=output, read_prompt=read_prompt,
+    ) == 0
+    assert output.getvalue().endswith("Goodbye.\n")
+    assert FakeClient.instances[-1].closed
+
+
+@pytest.mark.parametrize("mode, greeting", [
+    ("connection", "Enter a task (demo: 'list tools')."),
+    ("scripted", "Enter a task (demo: 'inspect workspace')."),
+    ("selected", "Enter a task."),
+    ("injected", "Enter a task."),
+])
+@pytest.mark.asyncio
+async def test_interactive_prompt_matches_selected_agent(
+    config: Path, monkeypatch: pytest.MonkeyPatch, mode: str, greeting: str,
+) -> None:
+    from types import ModuleType
+    monkeypatch.setattr(app, "MCPClient", FakeClient)
+    arguments = ["--config", str(config)]
+    factory: app.AgentFactory | None = None
+    agent = RecordingAgent()
+    if mode == "scripted":
+        config.write_text(json.dumps({"mcpServers": {
+            "filesystem": {"url": "https://example.com/filesystem"},
+        }}), encoding="utf-8")
+        arguments.append("--demo-loop")
+    elif mode == "selected":
+        module = ModuleType("cli_prompt_agent")
+        def create(client: MCPClient) -> RecordingAgent:
+            return agent
+        monkeypatch.setattr(module, "create", create, raising=False)
+        monkeypatch.setitem(sys.modules, "cli_prompt_agent", module)
+        arguments.extend(["--agent", "cli_prompt_agent:create"])
+    elif mode == "injected":
+        factory = lambda client: agent
+    async def read_prompt(prompt: str) -> str:
+        return "/exit"
+    output = io.StringIO()
+    assert await app.run_cli(
+        app.parse_arguments(arguments), output=output,
+        read_prompt=read_prompt, agent_factory=factory,
+    ) == 0
+    assert greeting + " " + app.HELP in output.getvalue()
+    if mode in {"selected", "injected"}:
+        assert "(demo:" not in output.getvalue()
+    assert FakeClient.instances[-1].closed
+
+
+@pytest.mark.asyncio
+async def test_workspace_option_reaches_configured_server(
+    config: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace with spaces"
+    workspace.mkdir()
+    config.write_text(json.dumps({"mcpServers": {
+        "filesystem": {"command": "node", "args": ["${workspaceRoot}"]},
+    }}), encoding="utf-8")
+    monkeypatch.setattr(app, "MCPClient", FakeClient)
+    assert await app.run_cli(app.parse_arguments([
+        "--config", str(config), "--workspace", str(workspace),
+        "--task", "list tools",
+    ]), output=io.StringIO()) == 0
+    server = FakeClient.instances[-1].configs[0]
+    assert getattr(server, "args") == (str(workspace),)
+    assert getattr(server, "cwd") == workspace
+    assert FakeClient.instances[-1].closed
+
+
+def test_interrupt_during_task_returns_130_and_closes_connections(
+    config: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+) -> None:
+    class InterruptingAgent:
+        async def run(self, task: str) -> AsyncIterator[Payload]:
+            yield {"type": "text", "content": "Working"}
+            raise KeyboardInterrupt()
+    monkeypatch.setattr(app, "MCPClient", FakeClient)
+    monkeypatch.setattr(app, "load_agent_factory", lambda spec: lambda client: InterruptingAgent())
+    assert app.main([
+        "--config", str(config), "--agent", "test:create", "--task", "Wait",
+    ]) == 130
+    assert FakeClient.instances[-1].closed
+    captured = capsys.readouterr()
+    assert "Interrupted. Goodbye." in captured.err
+    assert "Traceback" not in captured.err
+
+
+def test_malformed_config_returns_readable_error(
+    config: Path, capsys: pytest.CaptureFixture[str],
+) -> None:
+    config.write_text("not JSON", encoding="utf-8")
+    assert app.main(["--config", str(config), "--task", "list tools"]) == 1
+    error = capsys.readouterr().err
+    assert "Error:" in error
+    assert "Traceback" not in error
 
 
 def test_load_agent_factory(monkeypatch: pytest.MonkeyPatch) -> None:
