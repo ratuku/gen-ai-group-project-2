@@ -5,8 +5,8 @@ issues. It uses the official MCP Python SDK for stdio and Streamable HTTP transp
 
 ## Filesystem server
 
-`config/mcp.json` includes the official filesystem MCP server for the Windows
-demo. It is launched directly with `node` and pinned to version `2026.8.31`. Its only
+`config/mcp.json` includes the official filesystem MCP server for Windows. It is
+launched directly with `node` and pinned to version `2026.8.31`. Its only
 allowed directory is `${workspaceRoot}`, which the configuration loader expands
 to the repository root. The server therefore cannot read or modify sibling or
 parent directories.

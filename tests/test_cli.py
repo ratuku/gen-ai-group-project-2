@@ -11,7 +11,7 @@ import pytest
 
 from coding_assistant.cli import app
 from coding_assistant.agent import BasicAgentLoop
-from coding_assistant.contracts import Payload
+from coding_assistant.contracts import MCPClient as MCPClientContract, Payload
 from coding_assistant.mcp import MCPClient
 
 
@@ -33,6 +33,59 @@ class FakeClient:
     async def list_tools(self) -> list[Payload]:
         return [{"name": f"{name}.search", "server": name, "description": "Search documents"}
                 for name in self.connected_servers]
+
+
+class ToolClient(FakeClient):
+    def __init__(self, configs: Sequence[object]) -> None:
+        super().__init__(configs)
+        self.calls: list[tuple[str, Payload]] = []
+
+    async def list_tools(self) -> list[Payload]:
+        return [{
+            "name": "filesystem.write_file",
+            "server": "filesystem",
+            "description": "Write a file",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string"},
+                    "content": {"type": "string"},
+                },
+                "required": ["path", "content"],
+                "additionalProperties": False,
+            },
+        }]
+
+    async def call_tool(self, name: str, arguments: Payload) -> Payload:
+        self.calls.append((name, dict(arguments)))
+        return {
+            "type": "tool_result",
+            "name": name,
+            "is_error": False,
+            "content": [{"type": "text", "text": "File written"}],
+        }
+
+
+class ToolRequestProvider:
+    def __init__(self) -> None:
+        self.requests: list[tuple[Payload, ...]] = []
+
+    async def stream(
+        self, messages: Sequence[Payload], tools: Sequence[Payload]
+    ) -> AsyncIterator[Payload]:
+        del tools
+        self.requests.append(tuple(dict(message) for message in messages))
+        results = [message for message in messages if message.get("role") == "tool"]
+        if not results:
+            yield {
+                "type": "tool_call",
+                "id": "write-1",
+                "name": "filesystem.write_file",
+                "arguments": {"path": "hello.txt", "content": "hello"},
+            }
+        else:
+            yield {"type": "text", "content": "Tool outcome handled."}
+        yield {"type": "completed"}
 
 
 class RecordingAgent:
@@ -100,7 +153,7 @@ async def test_eof_and_interrupt_close_connections(
     async def read_prompt(prompt: str) -> str:
         raise exception()
     result = await app.run_cli(
-        app.parse_arguments(["--config", str(config), "--connection-demo"]), output=io.StringIO(), read_prompt=read_prompt,
+        app.parse_arguments(["--config", str(config), "--connection-check"]), output=io.StringIO(), read_prompt=read_prompt,
     )
     assert result == code
     assert FakeClient.instances[-1].closed
@@ -151,17 +204,17 @@ async def test_error_event_returns_failure() -> None:
 
 
 @pytest.mark.asyncio
-async def test_demo_does_not_claim_to_execute_coding_tasks(
+async def test_connection_check_does_not_claim_to_execute_coding_tasks(
     config: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(app, "MCPClient", FakeClient)
     output = io.StringIO()
     result = await app.run_cli(
-        app.parse_arguments(["--config", str(config), "--connection-demo", "--task", "Change a file"]),
+        app.parse_arguments(["--config", str(config), "--connection-check", "--task", "Change a file"]),
         output=output,
     )
     assert result == 1
-    assert "Connection demo only" in output.getvalue()
+    assert "Connection check only" in output.getvalue()
     assert "For coding tasks, launch with --provider groq or --provider ollama" in output.getvalue()
     assert "[Done]" not in output.getvalue()
     assert FakeClient.instances[-1].closed
@@ -210,9 +263,9 @@ def test_blank_task_rejected() -> None:
 
 
 @pytest.mark.parametrize("arguments", [
-    ["--unknown"], ["--max-iterations", "0"],
-    ["--max-iterations", "not-a-number"],
-    ["--demo-loop", "--agent", "example:create_agent"],
+    ["--unknown"], ["--execution-mode", "unsafe"],
+    ["--connection-check", "--agent", "example:create_agent"],
+    ["--connection-check", "--provider", "groq"],
     ["--agent", "missing_separator"], ["--agent", ":factory"],
     ["--agent", "module:"], ["--agent", "module:factory:extra"],
 ])
@@ -232,7 +285,7 @@ async def test_exit_aliases_close_connections(
         return command
     output = io.StringIO()
     assert await app.run_cli(
-        app.parse_arguments(["--config", str(config), "--connection-demo"]),
+        app.parse_arguments(["--config", str(config), "--connection-check"]),
         output=output, read_prompt=read_prompt,
     ) == 0
     assert output.getvalue().endswith("Goodbye.\n")
@@ -240,8 +293,7 @@ async def test_exit_aliases_close_connections(
 
 
 @pytest.mark.parametrize("mode, greeting", [
-    ("connection", "Enter a task (demo: 'list tools')."),
-    ("scripted", "Enter a task (demo: 'inspect workspace')."),
+    ("connection", "Enter a connection check ('list tools' or 'list servers')."),
     ("selected", "Enter a task."),
     ("injected", "Enter a task."),
 ])
@@ -254,13 +306,8 @@ async def test_interactive_prompt_matches_selected_agent(
     arguments = ["--config", str(config)]
     factory: app.AgentFactory | None = None
     agent = RecordingAgent()
-    if mode == "scripted":
-        config.write_text(json.dumps({"mcpServers": {
-            "filesystem": {"url": "https://example.com/filesystem"},
-        }}), encoding="utf-8")
-        arguments.append("--demo-loop")
-    elif mode == "connection":
-        arguments.append("--connection-demo")
+    if mode == "connection":
+        arguments.append("--connection-check")
     elif mode == "selected":
         module = ModuleType("cli_prompt_agent")
         def create(client: MCPClient) -> RecordingAgent:
@@ -278,8 +325,6 @@ async def test_interactive_prompt_matches_selected_agent(
         read_prompt=read_prompt, agent_factory=factory,
     ) == 0
     assert greeting + " " + app.HELP in output.getvalue()
-    if mode in {"selected", "injected"}:
-        assert "(demo:" not in output.getvalue()
     assert FakeClient.instances[-1].closed
 
 
@@ -295,7 +340,7 @@ async def test_workspace_option_reaches_configured_server(
     monkeypatch.setattr(app, "MCPClient", FakeClient)
     assert await app.run_cli(app.parse_arguments([
         "--config", str(config), "--workspace", str(workspace),
-        "--connection-demo", "--task", "list tools",
+        "--connection-check", "--task", "list tools",
     ]), output=io.StringIO()) == 0
     server = FakeClient.instances[-1].configs[0]
     assert getattr(server, "args") == (str(workspace),)
@@ -352,7 +397,7 @@ async def test_cli_connects_and_calls_two_real_stdio_servers(tmp_path: Path) -> 
         name: {"command": sys.executable, "args": [str(server)], "cwd": str(tmp_path)}
         for name in ("first", "second")
     }}), encoding="utf-8")
-    clients: list[MCPClient] = []
+    clients: list[MCPClientContract] = []
     class EchoProvider:
         async def stream(self, messages: Sequence[Payload], tools: Sequence[Payload]) -> AsyncIterator[Payload]:
             results = [message for message in messages if message.get("role") == "tool"]
@@ -363,12 +408,15 @@ async def test_cli_connects_and_calls_two_real_stdio_servers(tmp_path: Path) -> 
                 assert all("hello MCP" in str(result["content"]) for result in results)
                 yield {"type": "text", "content": "Both servers returned hello MCP."}
             yield {"type": "completed"}
-    def create_agent(client: MCPClient) -> BasicAgentLoop:
+    def create_agent(client: MCPClientContract) -> BasicAgentLoop:
         clients.append(client)
         return BasicAgentLoop(EchoProvider(), client)
     output = io.StringIO()
     result = await app.run_cli(
-        app.parse_arguments(["--config", str(config), "--task", "hello MCP"]),
+        app.parse_arguments([
+            "--config", str(config), "--execution-mode", "auto",
+            "--task", "hello MCP",
+        ]),
         output=output, agent_factory=create_agent,
     )
     assert result == 0
@@ -378,65 +426,109 @@ async def test_cli_connects_and_calls_two_real_stdio_servers(tmp_path: Path) -> 
     assert output.getvalue().count('\nhello MCP\n') == 2
     assert output.getvalue().count('"value": "hello MCP"') == 2
     assert "Both servers returned hello MCP." in output.getvalue()
-    assert clients[0].connected_servers == ()
+    assert len(clients) == 1
 
 
-@pytest.mark.parametrize("limit,code", [(3, 0), (1, 1)])
 @pytest.mark.asyncio
-async def test_scripted_cli_demo_uses_loop_and_honors_limit(
-    config: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, limit: int, code: int,
+async def test_confirmation_mode_shows_action_and_executes_after_approval(
+    config: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    config.write_text(json.dumps({"mcpServers": {
-        "filesystem": {"url": "https://example.com/filesystem"},
-        "deepwiki": {"url": "https://mcp.deepwiki.com/mcp"},
-    }}), encoding="utf-8")
-    class FilesystemDemoClient(FakeClient):
-        async def list_tools(self) -> list[Payload]:
-            return [
-                {
-                    "name": "filesystem.list_allowed_directories",
-                    "server": "filesystem",
-                    "server_tool_name": "list_allowed_directories",
-                    "input_schema": {
-                        "type": "object",
-                        "additionalProperties": False,
-                    },
-                },
-                {
-                    "name": "filesystem.list_directory",
-                    "server": "filesystem",
-                    "server_tool_name": "list_directory",
-                    "input_schema": {
-                        "type": "object",
-                        "properties": {"path": {"type": "string"}},
-                        "required": ["path"],
-                        "additionalProperties": False,
-                    },
-                },
-            ]
-        async def call_tool(self, name: str, arguments: Payload) -> Payload:
-            if name.endswith("list_allowed_directories"):
-                content = f"Allowed directories:\n{tmp_path}"
-            else:
-                assert arguments == {"path": str(tmp_path)}
-                content = "[FILE] README.md"
-            return {"content": [{"type": "text", "text": content}], "is_error": False}
-    monkeypatch.setattr(app, "MCPClient", FilesystemDemoClient)
+    monkeypatch.setattr(app, "MCPClient", ToolClient)
+    provider = ToolRequestProvider()
+    prompts: list[str] = []
+    answers = iter(["maybe", "yes"])
+
+    async def read_prompt(prompt: str) -> str:
+        prompts.append(prompt)
+        return next(answers)
+
     output = io.StringIO()
-    result = await app.run_cli(app.parse_arguments([
-        "--config", str(config), "--demo-loop", "--max-iterations", str(limit),
-        "--task", "inspect workspace",
-    ]), output=output)
-    assert result == code
-    assert "no live LLM" in output.getvalue()
-    client = FakeClient.instances[-1]
-    assert [getattr(server, "name", None) for server in client.configs] == ["filesystem"]
-    assert client.closed
-    if code == 0:
-        assert "Workspace inspection complete" in output.getvalue()
-        assert "[FILE] README.md" in output.getvalue()
-    else:
-        assert "Stopped after 1 model iterations" in output.getvalue()
+    result = await app.run_cli(
+        app.parse_arguments(["--config", str(config), "--task", "Write hello.txt"]),
+        output=output,
+        read_prompt=read_prompt,
+        agent_factory=lambda client: BasicAgentLoop(provider, client),
+    )
+
+    client = ToolClient.instances[-1]
+    assert isinstance(client, ToolClient)
+    assert result == 0
+    assert prompts == [
+        "Execute filesystem.write_file? [y/N] ",
+        "Execute filesystem.write_file? [y/N] ",
+    ]
+    assert client.calls == [
+        ("filesystem.write_file", {"path": "hello.txt", "content": "hello"})
+    ]
+    text = output.getvalue()
+    assert '"path": "hello.txt"' in text
+    assert '"content": "hello"' in text
+    assert "Execution  Confirmation required" in text
+    assert "[Approval] Please answer y or n." in text
+    assert "[Approved] filesystem.write_file" in text
+    assert "Tool outcome handled." in text
+
+
+@pytest.mark.asyncio
+async def test_confirmation_mode_rejection_does_not_execute_tool(
+    config: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(app, "MCPClient", ToolClient)
+    provider = ToolRequestProvider()
+
+    async def read_prompt(prompt: str) -> str:
+        assert prompt == "Execute filesystem.write_file? [y/N] "
+        return "no"
+
+    output = io.StringIO()
+    result = await app.run_cli(
+        app.parse_arguments(["--config", str(config), "--task", "Write hello.txt"]),
+        output=output,
+        read_prompt=read_prompt,
+        agent_factory=lambda client: BasicAgentLoop(provider, client),
+    )
+
+    client = ToolClient.instances[-1]
+    assert isinstance(client, ToolClient)
+    assert result == 0
+    assert client.calls == []
+    tool_result = provider.requests[1][-1]["content"]
+    assert isinstance(tool_result, dict)
+    assert tool_result["error_code"] == "tool_rejected"
+    text = output.getvalue()
+    assert "[Rejected] filesystem.write_file; tool was not executed" in text
+    assert "[Tool error] filesystem.write_file" in text
+    assert "Tool outcome handled." in text
+
+
+@pytest.mark.asyncio
+async def test_auto_mode_executes_without_prompting(
+    config: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(app, "MCPClient", ToolClient)
+    provider = ToolRequestProvider()
+
+    async def never_prompt(prompt: str) -> str:
+        raise AssertionError(f"Auto mode unexpectedly prompted: {prompt}")
+
+    output = io.StringIO()
+    result = await app.run_cli(
+        app.parse_arguments([
+            "--config", str(config), "--execution-mode", "auto",
+            "--task", "Write hello.txt",
+        ]),
+        output=output,
+        read_prompt=never_prompt,
+        agent_factory=lambda client: BasicAgentLoop(provider, client),
+    )
+
+    client = ToolClient.instances[-1]
+    assert isinstance(client, ToolClient)
+    assert result == 0
+    assert client.calls == [
+        ("filesystem.write_file", {"path": "hello.txt", "content": "hello"})
+    ]
+    assert "Execution  Automatic tool execution" in output.getvalue()
 
 
 @pytest.mark.asyncio
@@ -450,7 +542,7 @@ async def test_normal_cli_keeps_all_configured_servers(
     monkeypatch.setattr(app, "MCPClient", FakeClient)
 
     result = await app.run_cli(
-        app.parse_arguments(["--config", str(config), "--connection-demo", "--task", "list tools"]),
+        app.parse_arguments(["--config", str(config), "--connection-check", "--task", "list tools"]),
         output=io.StringIO(),
     )
 
@@ -482,7 +574,7 @@ async def test_provider_shortcuts_and_default_use_real_agent_factory(
     ]), output=output) == 0
     assert specs == [f"coding_assistant.providers.{provider}:create_agent"]
     assert "Juniper | AI Coding Assistant" in output.getvalue()
-    assert "Connection demo only" not in output.getvalue()
+    assert "Connection check only" not in output.getvalue()
     assert "Hello read README" in output.getvalue()
     assert FakeClient.instances[-1].closed
 

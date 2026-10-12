@@ -32,7 +32,7 @@ class TerminalView:
         )
 
     def welcome(self, workspace: Path, provider: str, model: str, servers: int,
-                execution: str = "Automatic tool execution") -> None:
+                execution: str = "Confirmation required") -> None:
         try:
             release = version("coding-assistant")
         except PackageNotFoundError:

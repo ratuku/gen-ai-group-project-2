@@ -54,6 +54,7 @@ files = ["src", "rag_server", "tests"]
 module = [
     "echo_mcp_server",
     "test_architecture",
+    "test_execution_policy",
     "test_mcp_client",
     "test_mcp_config",
     "test_groq_provider",

@@ -48,14 +48,15 @@ Submit one task:
 
 ```powershell
 coding-assistant `
-  --agent coding_assistant.providers.ollama:create_agent `
+  --provider ollama `
+  --execution-mode confirm `
   --task "Explain what this project does in one sentence."
 ```
 
 Start an interactive session:
 
 ```powershell
-coding-assistant --agent coding_assistant.providers.ollama:create_agent
+coding-assistant --provider ollama
 ```
 
 The standard `config/mcp.json` connects both the local filesystem server and the
@@ -74,6 +75,11 @@ using `tool_name`. When sending history to Ollama, the adapter removes agent-onl
 IDs, preserves tool order, and serializes the complete normalized MCP result as
 JSON. The next Ollama response is translated back into `text` and `tool_call`
 events for `BasicAgentLoop`.
+
+Tool execution requires per-call confirmation by default. The requested name and
+arguments are shown before the prompt; a rejected call is returned to the model and
+is not sent to MCP. Use `--execution-mode auto` only when unattended execution is
+intended.
 
 ## Troubleshooting
 

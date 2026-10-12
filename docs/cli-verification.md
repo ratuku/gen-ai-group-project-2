@@ -29,7 +29,7 @@ and whitespace checks passed. The unrelated RAG test suite was not run.
 | Ctrl+C at prompt | Passed in a real terminal; exit 130 |
 | During-task interruption and cancellation | Automated checks pass with a test client; real server interruption verification recorded below |
 | Task/startup errors and invalid arguments | Passed; exit codes 1 and 2 |
-| Demo suggestions only in demo modes | Passed |
+| Connection-check prompt clearly identifies its supported tasks | Passed |
 
 ## Installed CLI and live Groq checks
 
@@ -47,9 +47,8 @@ uses the absolute path to the installed Node filesystem server script.
 
 ```powershell
 .\.venv\Scripts\coding-assistant.exe --help
-.\.venv\Scripts\python.exe -m coding_assistant.cli --connection-demo --config $emptyConfig --task "list tools"
-.\.venv\Scripts\coding-assistant.exe --connection-demo --config $emptyConfig --task "list servers"
-.\.venv\Scripts\coding-assistant.exe --config $filesystemConfig --workspace $sampleWorkspace --demo-loop --task "inspect workspace"
+.\.venv\Scripts\python.exe -m coding_assistant.cli --connection-check --config $emptyConfig --task "list tools"
+.\.venv\Scripts\coding-assistant.exe --connection-check --config $emptyConfig --task "list servers"
 .\.venv\Scripts\coding-assistant.exe --config $emptyConfig --agent coding_assistant.providers.groq:create_agent --task "Reply with one short greeting."
 .\.venv\Scripts\coding-assistant.exe --config $filesystemConfig --workspace $sampleWorkspace --agent coding_assistant.providers.groq:create_agent --task "Read the file at $sampleWorkspace\sample.txt using filesystem.read_text_file. Summarize its project name and release color."
 ```
@@ -61,7 +60,7 @@ Juniper correctly.
 
 Interactive checks were performed in a real Windows terminal:
 
-- Connection demo: `/help`, `/tools`, `list tools`, then `/exit`; task output and
+- Connection check: `/help`, `/tools`, `list tools`, then `/exit`; task output and
   successful exit were observed.
 - Groq with no tools: a short greeting returned `Hello!` and `[Done]`, followed by
   `/quit` and exit 0.
@@ -88,7 +87,7 @@ should close only after the CLI changes are reviewed and merged.
 
 Juniper now uses Groq for a normal launch, supports `--provider groq` and
 `--provider ollama`, and preserves custom factories through `--agent`. Discovery
-without an LLM is explicitly selected with `--connection-demo`.
+without an LLM is explicitly selected with `--connection-check`.
 
 The terminal shows a branded session panel containing workspace, provider, model,
 server count, version, and execution behavior. Tool arguments and results are
@@ -101,10 +100,8 @@ and completed successfully. Running the generated file separately printed
 `Hello, Juniper!`. The CLI's easier provider selection uses the existing adapters;
 no model/provider logic was added to the main agent loop.
 
-This update covers the CLI scope only. Confirmation mode, shell-command tools,
-custom RAG retrieval, advanced RAG, and final evaluation/deliverables remain
-separate project work. The startup panel explicitly identifies the current
-automatic execution behavior.
+This record covers the original CLI scope. Issue #13 later added confirmation and
+automatic execution modes; current behavior is documented in [CLI usage](cli.md).
 
 ## Follow-up review
 

@@ -1,7 +1,7 @@
 # Groq Cloud provider
 
 The Groq adapter implements the existing `ModelProvider` contract without changing
-the CLI, agent loop, MCP client, or tool dispatcher. It streams text, assembles
+the agent loop, MCP client, or tool dispatcher. It streams text, assembles
 fragmented function calls, preserves tool-call IDs, and sends complete MCP results
 back to the cloud model on the next turn.
 
@@ -52,7 +52,8 @@ Run a single task:
 coding-assistant `
   --config .\config\mcp.json `
   --workspace . `
-  --agent coding_assistant.providers.groq:create_agent `
+  --provider groq `
+  --execution-mode confirm `
   --task "List the top-level project files using the filesystem tool."
 ```
 
@@ -71,9 +72,11 @@ secrets or private repository content unless that use is permitted by your team 
 Groq's applicable terms.
 
 MCP tools still execute through this application's existing dispatcher. The model
-requests a tool; the dispatcher validates its exact name and JSON arguments, invokes
-the configured MCP server, and adds the normalized result to conversation history.
-Groq does not directly execute the local filesystem tool.
+requests a tool; the dispatcher validates its exact name and JSON arguments. The
+default confirmation policy then waits for approval before invoking the configured
+MCP server. Rejections and results are added to conversation history. Groq does not
+directly execute the local filesystem tool. Pass `--execution-mode auto` only when
+unattended execution is intended.
 
 Groq streams tool-call IDs, names, and JSON arguments in fragments. The adapter
 assembles and validates a complete object before emitting the provider-neutral
