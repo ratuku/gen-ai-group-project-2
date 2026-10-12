@@ -2,7 +2,7 @@
 
 Step 1 already produces chunks and embeddings in `rag_server/artifacts/prepared.npz`.
 Step 2 imports those vectors into persistent Chroma storage and exposes a
-`search_docs` MCP tool. The application's multi-server client names it
+`search_docs` MCP tool with [cross-encoder reranking](rag-reranking.md). The application's multi-server client names it
 `rag.search_docs`. It returns evidence; the existing agent and selected LLM use
 that evidence to write an answer.
 
@@ -49,6 +49,8 @@ and `python -m rag_server.server --store DIR`. Set the same store in MCP config.
    function is disabled, so document embeddings are reused exactly.
 3. `retrieval/search.py` embeds a query using the stored model identity and runs
    Chroma's cosine nearest-neighbor search. Chroma uses an approximate HNSW index.
+   The MCP default reranks 20 candidates with a local cross-encoder before
+   returning the best five; `mode="cosine"` selects the original baseline.
 4. `server.py` exposes that retrieval through MCP over stdio. Local inference runs
    outside the asynchronous event loop, with searches serialized within a server.
 
@@ -70,6 +72,8 @@ Git-ignored `rag_server/artifacts/` and must not be committed.
 relative filename, such as `languages/Python.pdf`. Optional `min_similarity`
 filters weak results; there is no universal threshold suitable for all queries.
 
+See [reranking configuration](rag-reranking.md) for `mode` and `candidate_k`.
+
 The response contains `query`, `embedding_model`, `score_type: "cosine_similarity"`,
 and a `results` list. Each result contains:
 
@@ -81,6 +85,7 @@ and a `results` list. Each result contains:
 | `chunk_id` | Stable ingestion ID identifying the exact chunk |
 | `chunk_index` | Zero-based position within the source/page |
 | `similarity` | Cosine similarity, calculated as 1 minus Chroma distance |
+| `rerank_score` | Cross-encoder relevance score, or null in cosine mode |
 
 Higher scores mean closer vectors; scores are not probabilities or guarantees
 that a snippet answers the question. Empty filtered results mean no supporting
@@ -97,9 +102,9 @@ for persistence and metadata filtering. Query and document vectors must use the
 same model, not merely the same dimension.
 
 Exact identifiers, error messages, and version-specific API names may benefit
-from hybrid keyword/vector retrieval. Cross-encoder reranking is another next
-step. Basic dense retrieval does **not** fulfill the separate advanced-RAG
-requirement; evaluate a later technique against this baseline.
+from hybrid keyword/vector retrieval. [Cross-encoder reranking](rag-reranking.md)
+now implements the advanced-RAG stage and provides a command to compare it with
+this cosine baseline.
 
 ## Tests
 

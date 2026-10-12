@@ -77,9 +77,9 @@ Project 2 supports Ollama and Groq through its provider abstraction.
 
 [Step 2](rag-retrieval.md) implements vector storage, retrieval, and MCP tool exposure.
 Ordinary splitting and dense retrieval do not by themselves fulfill the advanced
-RAG requirement. A later step can add cross-encoder reranking: retrieve candidate
-chunks, score their relevance to the question, and return the best few. Evaluate
-that against the baseline before claiming an improvement.
+RAG requirement. [Cross-encoder reranking](rag-reranking.md) now provides that advanced stage:
+retrieve candidates, score question/passage pairs, and select the best few.
+Its comparison command runs both modes through MCP.
 
 ## Tests
 
