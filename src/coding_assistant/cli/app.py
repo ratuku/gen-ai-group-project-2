@@ -14,15 +14,14 @@ from typing import TextIO
 
 from prompt_toolkit import PromptSession
 
-from coding_assistant.agent import BasicAgentLoop
-from coding_assistant.agent.demo import WorkspaceDemoProvider
 from coding_assistant.config import load_mcp_config
 from coding_assistant.cli.display import ASSISTANT_NAME, TerminalView
-from coding_assistant.contracts import AgentLoop, Payload
+from coding_assistant.contracts import AgentLoop, MCPClient as MCPClientContract, Payload
+from coding_assistant.execution import ExecutionMode, PolicyMCPClient
 from coding_assistant.mcp import MCPClient
 
 HELP = "/help: show commands | /servers: connections | /tools: tools | /exit or /quit: exit"
-AgentFactory = Callable[[MCPClient], AgentLoop]
+AgentFactory = Callable[[MCPClientContract], AgentLoop]
 ReadPrompt = Callable[[str], Awaitable[str]]
 PROVIDER_FACTORIES = {
     "groq": "coding_assistant.providers.groq:create_agent",
@@ -37,8 +36,8 @@ def describe_tools(tools: Sequence[Payload]) -> str:
     ) or "  No tools available."
 
 
-class ConnectionDemoAgent:
-    """Temporary discovery-only adapter, not the autonomous agent implementation."""
+class ConnectionCheckAgent:
+    """Read-only adapter for inspecting configured MCP connections and tools."""
 
     def __init__(self, client: MCPClient) -> None:
         self.client = client
@@ -52,7 +51,7 @@ class ConnectionDemoAgent:
         else:
             yield {
                 "type": "error",
-                "content": "Connection demo supports 'list tools' or 'list servers'. "
+                "content": "Connection check supports 'list tools' or 'list servers'. "
                 "For coding tasks, launch with --provider groq or --provider ollama; "
                 "custom agents use --agent module:factory.",
             }
@@ -69,7 +68,7 @@ def load_agent_factory(spec: str) -> AgentFactory:
     if not callable(factory):
         raise ValueError(f"Agent factory {spec!r} is not callable")
 
-    def create(client: MCPClient) -> AgentLoop:
+    def create(client: MCPClientContract) -> AgentLoop:
         agent = factory(client)
         if not isinstance(agent, AgentLoop):
             raise ValueError("Agent factory must return an object with async run(task)")
@@ -144,62 +143,85 @@ async def run_cli(
     agent_factory: AgentFactory | None = None,
 ) -> int:
     config = load_mcp_config(options.config, workspace_root=options.workspace)
-    scripted_demo = options.demo_loop and agent_factory is None
-    server_configs = config.servers
-    if scripted_demo:
-        server_configs = tuple(
-            server for server in config.servers if server.name == "filesystem"
-        )
-        if not server_configs:
-            raise ValueError("--demo-loop requires a configured filesystem MCP server")
+    connection_check = options.connection_check and agent_factory is None
     if agent_factory is not None:
-        factory = agent_factory
-    elif scripted_demo or options.connection_demo:
-        factory = ConnectionDemoAgent
+        factory: AgentFactory | None = agent_factory
+    elif connection_check:
+        factory = None
     else:
         factory = load_agent_factory(options.agent or PROVIDER_FACTORIES[options.provider or "groq"])
-    async with MCPClient(server_configs) as client:
+    view = TerminalView(output)
+    active_prompt = read_prompt
+    prompt_session: PromptSession[str] | None = None
+
+    async def prompt_user(prompt: str) -> str:
+        nonlocal active_prompt, prompt_session
+        if active_prompt is not None:
+            return await active_prompt(prompt)
+        if prompt_session is None:
+            prompt_session = PromptSession()
+        return str(await prompt_session.prompt_async(prompt))
+
+    async def approve_tool(name: str, arguments: Payload) -> bool:
+        del arguments  # The immediately preceding tool panel displays exact arguments.
+        while True:
+            try:
+                answer = (await prompt_user(f"Execute {name}? [y/N] ")).strip().lower()
+            except EOFError:
+                view.marker("Rejected", f"{name}; input closed")
+                return False
+            if answer in {"y", "yes"}:
+                view.marker("Approved", name)
+                return True
+            if answer in {"", "n", "no"}:
+                view.marker("Rejected", f"{name}; tool was not executed")
+                return False
+            view.marker("Approval", "Please answer y or n.")
+
+    async with MCPClient(config.servers) as client:
         tools = await client.list_tools()
         print(f"Connected to {len(client.connected_servers)} MCP server(s):", file=output)
         for name in client.connected_servers:
             count = sum(tool.get("server") == name for tool in tools)
             print(f"  {name}: {count} tool(s)", file=output)
-        if not server_configs:
+        if not config.servers:
             print("No MCP servers configured. Add servers to your --config file.", file=output)
-        if scripted_demo:
-            print("Scripted agent-loop demo; real MCP calls, no live LLM.", file=output)
-            agent: AgentLoop = BasicAgentLoop(WorkspaceDemoProvider(), client, max_iterations=options.max_iterations)
+        if connection_check:
+            print("Connection check only; no model or tool execution.", file=output)
+            agent: AgentLoop = ConnectionCheckAgent(client)
         else:
-            if options.connection_demo and agent_factory is None:
-                print("Connection demo only; use --demo-loop to try the basic agent cycle.", file=output)
-            agent = factory(client)
+            assert factory is not None
+            execution_mode: ExecutionMode = options.execution_mode
+            policy_client = PolicyMCPClient(
+                client,
+                mode=execution_mode,
+                approve=approve_tool if execution_mode == "confirm" else None,
+            )
+            agent = factory(policy_client)
         provider = getattr(agent, "provider", None)
-        if scripted_demo:
-            provider_name, model_name = "Scripted demo", "No LLM"
-        elif options.connection_demo and agent_factory is None:
-            provider_name, model_name = "Connection demo", "No LLM"
+        if connection_check:
+            provider_name, model_name = "Connection check", "No LLM"
         else:
             provider_name = type(provider).__name__.removesuffix("Provider") if provider is not None else "Custom agent"
             model_name = str(getattr(provider, "model", "Custom agent"))
-        view = TerminalView(output)
-        execution = "Connection discovery only" if options.connection_demo and agent_factory is None else "Automatic tool execution"
+        if connection_check:
+            execution = "Connection discovery only"
+        elif options.execution_mode == "confirm":
+            execution = "Confirmation required"
+        else:
+            execution = "Automatic tool execution"
         view.welcome(config.workspace_root, provider_name, model_name, len(client.connected_servers), execution)
         if options.task is not None:
             return await display_task(agent, options.task.strip(), output)
 
-        if scripted_demo:
-            greeting = "Enter a task (demo: 'inspect workspace'). "
-        elif options.connection_demo and agent_factory is None:
-            greeting = "Enter a task (demo: 'list tools'). "
+        if connection_check:
+            greeting = "Enter a connection check ('list tools' or 'list servers'). "
         else:
             greeting = "Enter a task. "
         print(greeting + HELP, file=output, flush=True)
-        if read_prompt is None:
-            session: PromptSession[str] = PromptSession()
-            read_prompt = session.prompt_async
         while True:
             try:
-                task = (await read_prompt(f"{ASSISTANT_NAME.lower()}> ")).strip()
+                task = (await prompt_user(f"{ASSISTANT_NAME.lower()}> ")).strip()
             except EOFError:
                 print("Goodbye.", file=output)
                 return 0
@@ -232,16 +254,13 @@ def parse_arguments(arguments: Sequence[str] | None = None) -> argparse.Namespac
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--provider", choices=tuple(PROVIDER_FACTORIES), help="Model provider (default: groq); configure credentials/model in the environment.")
     mode.add_argument("--agent", metavar="MODULE:FACTORY", help="Custom agent factory accepting MCPClient.")
-    mode.add_argument("--connection-demo", action="store_true", help="List MCP servers/tools without using an LLM.")
-    mode.add_argument("--demo-loop", action="store_true", help="Run the basic agent loop with a scripted, read-only workspace demo (no LLM).")
-    parser.add_argument("--max-iterations", type=int, default=8, help="Model-step limit for --demo-loop (default: 8); custom factories configure their own limit.")
+    mode.add_argument("--connection-check", action="store_true", help="List MCP servers/tools without using an LLM.")
+    parser.add_argument("--execution-mode", choices=("confirm", "auto"), default="confirm", help="Tool execution policy (default: confirm).")
     options = parser.parse_args(arguments)
     if options.agent is not None:
         module_name, separator, attribute = options.agent.partition(":")
         if not separator or not module_name.strip() or not attribute.strip() or ":" in attribute:
             parser.error("--agent must be module:factory")
-    if options.max_iterations < 1:
-        parser.error("--max-iterations must be positive")
     if options.task is not None and not options.task.strip():
         parser.error("--task must not be empty")
     return options

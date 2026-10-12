@@ -37,7 +37,7 @@ class FakeMCPClient:
                 "content": [{"type": "text", "text": text}]}
 
 
-class ScriptedProvider:
+class DeterministicProvider:
     def __init__(self, turns: list[list[Payload]]) -> None:
         self.turns = iter(turns)
         self.requests: list[tuple[Sequence[Payload], Sequence[Payload]]] = []
@@ -54,7 +54,7 @@ def tool(name: str, **arguments: object) -> Payload:
 
 @pytest.mark.asyncio
 async def test_multistep_request_includes_results_in_model_context() -> None:
-    provider = ScriptedProvider([
+    provider = DeterministicProvider([
         [tool("filesystem.list_directory", path="."), {"type": "completed"}],
         [tool("filesystem.read_text_file", path="README.md"), {"type": "completed"}],
         [{"type": "text", "content": "This repository is "},
@@ -82,7 +82,7 @@ async def test_multistep_request_includes_results_in_model_context() -> None:
 
 @pytest.mark.asyncio
 async def test_conversation_persists_across_tasks_and_snapshots_are_isolated() -> None:
-    provider = ScriptedProvider([
+    provider = DeterministicProvider([
         [{"type": "text", "content": "First answer"}],
         [{"type": "text", "content": "Follow-up answer"}],
     ])
@@ -99,7 +99,7 @@ async def test_conversation_persists_across_tasks_and_snapshots_are_isolated() -
 
 @pytest.mark.asyncio
 async def test_iteration_limit_stops_repeated_tool_requests() -> None:
-    provider = ScriptedProvider([[tool("filesystem.list_directory", path=".")]] * 4)
+    provider = DeterministicProvider([[tool("filesystem.list_directory", path=".")]] * 4)
     client = FakeMCPClient()
     events = [event async for event in BasicAgentLoop(provider, client, max_iterations=2).run("Loop")]
     assert len(provider.requests) == len(client.calls) == 2
@@ -110,7 +110,7 @@ async def test_iteration_limit_stops_repeated_tool_requests() -> None:
 
 @pytest.mark.asyncio
 async def test_multiple_calls_in_one_turn_all_reach_context() -> None:
-    provider = ScriptedProvider([
+    provider = DeterministicProvider([
         [tool("filesystem.list_directory", path="."), tool("filesystem.read_text_file", path="README.md")],
         [{"type": "text", "content": "Both results received"}],
     ])
@@ -129,7 +129,7 @@ async def test_tool_failure_is_available_to_model(raises: bool) -> None:
             if raises:
                 raise RuntimeError("permission denied")
             return {"is_error": True, "content": "permission denied"}
-    provider = ScriptedProvider([
+    provider = DeterministicProvider([
         [tool("filesystem.read_text_file", path="README.md")],
         [{"type": "text", "content": "I could not read the file: permission denied."}],
     ])
@@ -155,7 +155,7 @@ async def test_tool_failure_is_available_to_model(raises: bool) -> None:
 async def test_rejected_tool_request_is_available_to_model(
     requested_tool: str, arguments: Payload, error_code: str,
 ) -> None:
-    provider = ScriptedProvider([
+    provider = DeterministicProvider([
         [{"type": "tool_call", "id": "rejected_call", "name": requested_tool,
           "arguments": arguments}],
         [{"type": "text", "content": f"The tool failed with {error_code}."}],
@@ -184,7 +184,7 @@ async def test_rejected_tool_request_is_available_to_model(
 @pytest.mark.asyncio
 async def test_bad_model_response_is_a_readable_failure(turn: list[Payload]) -> None:
     client = FakeMCPClient()
-    events = [event async for event in BasicAgentLoop(ScriptedProvider([turn]), client).run("Task")]
+    events = [event async for event in BasicAgentLoop(DeterministicProvider([turn]), client).run("Task")]
     assert events[-2]["type"] == "error"
     assert events[-1]["reason"] == "error"
     assert not client.calls
@@ -209,7 +209,7 @@ async def test_provider_exception_and_later_task_recovery() -> None:
 @pytest.mark.parametrize("limit", [0, -1, True])
 def test_invalid_iteration_limit(limit: int) -> None:
     with pytest.raises(ValueError):
-        BasicAgentLoop(ScriptedProvider([]), FakeMCPClient(), max_iterations=limit)
+        BasicAgentLoop(DeterministicProvider([]), FakeMCPClient(), max_iterations=limit)
 
 
 @pytest.mark.asyncio
@@ -274,7 +274,7 @@ async def test_cancelled_tool_call_leaves_coherent_history() -> None:
             started.set()
             await asyncio.Event().wait()
             return {}
-    provider = ScriptedProvider([[tool("filesystem.list_directory", path=".")],
+    provider = DeterministicProvider([[tool("filesystem.list_directory", path=".")],
                                  [{"type": "text", "content": "Retry accepted"}]])
     agent = BasicAgentLoop(provider, WaitingClient())
     async def consume() -> None:

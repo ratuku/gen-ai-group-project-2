@@ -112,7 +112,7 @@ async def _run() -> None:
 
 def main() -> int:
     if sys.platform != "win32":
-        print("FAIL: this demo configuration currently supports Windows only")
+        print("FAIL: this filesystem configuration currently supports Windows only")
         return 1
     try:
         asyncio.run(_run())

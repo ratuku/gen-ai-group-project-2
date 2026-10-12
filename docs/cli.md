@@ -8,65 +8,55 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e .
 npm.cmd ci
 .\.venv\Scripts\coding-assistant.exe --help
-.\.venv\Scripts\coding-assistant.exe --connection-demo
+.\.venv\Scripts\coding-assistant.exe --connection-check --task "list tools"
 ```
 
 `.\.venv\Scripts\python.exe -m coding_assistant.cli` is an equivalent launch
 command. Invoking the environment's executable directly avoids activation and PATH
 requirements. If the environment is already activated, `coding-assistant` works too.
 
-The normal CLI connects to all servers in `config/mcp.json`, discovers their tools,
-and prints each connected server and its tool count. The current config contains
-the filesystem and hosted DeepWiki servers, so normal CLI use requires internet
-access. A server connection failure produces an error and a nonzero exit, not a
-successful connection banner.
+The CLI connects to all servers in `config/mcp.json`, discovers their tools, and
+prints each connected server and its tool count. The current config contains the
+filesystem and hosted DeepWiki servers, so normal CLI use requires internet access.
+A server connection failure produces an error and a nonzero exit, not a successful
+connection banner.
 
-`--demo-loop` intentionally selects only the filesystem server. This keeps the
-scripted workspace demonstration independent of DeepWiki and internet availability
-while normal CLI and custom-agent modes retain access to every configured server.
+## Execution modes
 
-## Terminal display
+`--execution-mode confirm` is the default. For each valid model-requested action,
+Juniper first shows a tool panel containing the exact qualified tool name and
+arguments, then asks `Execute <tool>? [y/N]`. Enter `y` or `yes` to run it. Enter
+`n`, `no`, or a blank response to reject it. Invalid answers are prompted again.
+End-of-input safely rejects the pending action.
+
+A rejected action never reaches the MCP server. The agent receives a normalized
+error result with `error_code=tool_rejected`, so the model can explain the rejection
+or choose a different action. Approval applies to one tool call only; another tool
+call requires another decision.
+
+Use automatic execution only in a workspace and configuration you trust:
+
+```powershell
+.\.venv\Scripts\coding-assistant.exe --provider groq --execution-mode auto
+```
+
+In `auto` mode, validated actions run without an approval prompt. Unknown tools and
+invalid arguments are still blocked by the dispatcher in both modes.
+
+## Terminal display and commands
 
 Juniper shows the workspace, provider, model, connected-server count, version, and
-current execution behavior in its startup panel. Model text streams as it arrives.
-Tool panels show the qualified tool name and its arguments; result panels show
-the returned content. Long results show the first 16 lines in the terminal while
-the complete result remains available to the model. `/tools` shows a tool table.
-
-Captured single-task output uses plain labels. Set `NO_COLOR` to disable colors.
-The current execution behavior is automatic; confirmation mode is separate work
-in issue #13 and is not advertised as implemented.
-
-## Demo commands
+execution mode in its startup panel. Model text streams as it arrives. Tool panels
+show the qualified tool name and arguments; result panels show returned content.
+Long results show the first 16 lines in an interactive terminal while the complete
+result remains available to the model. `/tools` shows the discovered-tool table.
 
 ```text
 juniper> /servers
 juniper> /tools
-juniper> list tools
-juniper> list servers
 juniper> /help
 juniper> /exit
 ```
-
-The default CLI runs the real Groq agent. Use `--connection-demo` to explicitly
-select connection discovery without an LLM.
-Use `.\.venv\Scripts\coding-assistant.exe --demo-loop` to exercise the basic agent cycle with a
-scripted provider and real filesystem calls; see [Basic agent loop](agent-loop.md).
-In `--connection-demo`, `list tools` and `list servers` pass through a small adapter implementing the
-existing `AgentLoop.run(task)` interface. Other coding tasks report that an agent
-loop is required; this mode does not invoke an LLM or execute filesystem actions.
-
-For one task followed by exit:
-
-```powershell
-.\.venv\Scripts\coding-assistant.exe --connection-demo --task "list tools"
-.\.venv\Scripts\coding-assistant.exe --connection-demo --config .\config\mcp.json --workspace . --task "list servers"
-.\.venv\Scripts\coding-assistant.exe --demo-loop --task "inspect workspace"
-```
-
-`--config` selects an MCP JSON file. `--workspace` overrides `${workspaceRoot}`
-for configured servers; otherwise the existing config loader uses the config
-directory's parent. Run from the repo root or provide an explicit config path.
 
 `/exit`, `/quit`, `exit`, `quit`, or end-of-input close all MCP connections and
 exit successfully. Ctrl+C exits with status 130 and closes connections. Use Ctrl+D
@@ -74,26 +64,44 @@ for end-of-input on macOS/Linux; Windows terminals can use `/exit`. One-shot tas
 failures exit with status 1. Invalid CLI arguments exit with status 2. In interactive
 mode, a failed task is shown and the user can submit another task.
 
-Interactive mode requires a real Windows terminal. When launching from a script
-with redirected input/output, use `--task` instead of piping prompts into the CLI.
+Interactive mode requires a real terminal. When launching from a script with
+redirected input/output, use `--task`. A one-shot task can still prompt for each
+tool approval unless `--execution-mode auto` is selected.
+
+## Connection check
+
+`--connection-check` lists configured connections or tools without starting a
+model or executing a tool. It accepts only `list tools` and `list servers` as tasks:
+
+```powershell
+.\.venv\Scripts\coding-assistant.exe --connection-check --task "list tools"
+.\.venv\Scripts\coding-assistant.exe `
+  --connection-check `
+  --config .\config\mcp.json `
+  --workspace . `
+  --task "list servers"
+```
+
+`--config` selects an MCP JSON file. `--workspace` overrides `${workspaceRoot}`
+for configured servers; otherwise the config loader uses the config directory's
+parent. Run from the repository root or provide an explicit config path.
 
 ## Groq cloud tasks
 
-Groq runs the model in the cloud, so a powerful local GPU is unnecessary. Set
-`GROQ_API_KEY` in the same terminal that launches the CLI. In PowerShell 7+, masked
-input keeps the key out of command history:
+Set `GROQ_API_KEY` in the same terminal that launches the CLI. In PowerShell 7+,
+masked input keeps the key out of command history:
 
 ```powershell
 $env:GROQ_API_KEY = Read-Host "Groq API key" -MaskInput
 .\.venv\Scripts\coding-assistant.exe --provider groq
 ```
 
-The live-provider prompt says `Enter a task.`; demo modes show their supported
-example task. For a single model-backed task:
+For a single model-backed task:
 
 ```powershell
 .\.venv\Scripts\coding-assistant.exe `
   --provider groq `
+  --execution-mode confirm `
   --workspace . `
   --task "List the top-level project files using the filesystem tool."
 ```
@@ -117,35 +125,38 @@ $cliTestConfig = Join-Path ([IO.Path]::GetTempPath()) "coding-assistant-empty-mc
 
 For filesystem-only tests, use a separate configuration containing just the
 `filesystem` entry from `config/mcp.json`, with the Node server script path resolved
-for that configuration's location. This avoids connecting to DeepWiki. Pass
-`--workspace` with the sample directory. Do not commit or print the API key.
+for that configuration's location. Pass `--workspace` with the sample directory.
+Do not commit or print the API key.
 
 ## Agent-loop integration
 
 Use `--provider groq` (the default) or `--provider ollama` for the shipped adapters.
 Ollama requires `OLLAMA_MODEL`; Groq requires `GROQ_API_KEY`, with optional
-`GROQ_MODEL`. Providers, custom factories, and demo modes are mutually exclusive.
+`GROQ_MODEL`. Provider selection, custom factories, and `--connection-check` are
+mutually exclusive.
 
-The CLI owns input, output, and MCP connection cleanup. The agent and provider components
-own model requests and reasoning; execution approval policy belongs to the later
-tool-execution ticket.
-The CLI makes no tool-execution decisions for a supplied agent.
+The CLI owns input, output, execution policy, and MCP connection cleanup. It wraps
+the connected MCP client before passing it to the selected agent factory, so both
+shipped providers and custom agents using that client receive the same confirm/auto
+behavior. The provider interface and `BasicAgentLoop` behavior are unchanged.
 
-Pass a synchronous factory that accepts the connected `MCPClient` and returns an
-`AgentLoop` implementation:
+Pass a synchronous factory that accepts the connected MCP-client contract and
+returns an `AgentLoop` implementation:
 
 ```powershell
 .\.venv\Scripts\coding-assistant.exe --agent your_agent_module:create_agent
-.\.venv\Scripts\coding-assistant.exe --agent your_agent_module:create_agent --task "Explain README.md"
+.\.venv\Scripts\coding-assistant.exe `
+  --agent your_agent_module:create_agent `
+  --execution-mode auto `
+  --task "Explain README.md"
 ```
 
-The factory module must be importable in the active environment. `your_agent_module`
-is an integration placeholder, not a module shipped in this ticket. The returned
+The factory module must be importable in the active environment. The returned
 agent's `run(task)` is an async iterator of the existing contract mappings:
 
 - `text` with `content`: streamed answer text.
-- `tool_call` with `name`: a visible tool invocation label.
-- `tool_result` with `name`, `content`, and optional `is_error`: readable results.
+- `tool_call` with `name` and `arguments`: the requested action.
+- `tool_result` with `name`, `content`, and optional `is_error`: its result.
 - `status` with `content`: progress.
 - `error` with `content` or `message`: task failure.
 - `completed`: final completion marker.
@@ -160,15 +171,14 @@ for environment-based model configuration.
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-.\.venv\Scripts\python.exe -m pytest tests/test_cli.py
+.\.venv\Scripts\python.exe -m pytest tests/test_cli.py tests/test_execution_policy.py
 .\.venv\Scripts\python.exe -m mypy
 ```
 
-Tests cover prompt input, commands, streamed results, failures, EOF/Ctrl+C cleanup,
-one-shot mode, and the agent factory. An integration test starts two real local
-stdio echo MCP servers, calls both through an injected test agent, and verifies
-disconnection. These local test fixtures are separate from the configured hosted
-DeepWiki server.
+Tests cover interactive commands, streamed results, confirmation, rejection,
+automatic execution, failures, EOF/Ctrl+C cleanup, one-shot mode, and agent
+factories. An integration test starts two real local stdio MCP servers, calls both
+through an injected test agent in automatic mode, and verifies the results.
 
 DeepWiki reads documentation and answers questions about specific public GitHub
 repositories. Include a repository in `owner/repo` format in your task, for example:
@@ -178,6 +188,3 @@ Use DeepWiki to explain the architecture of modelcontextprotocol/python-sdk.
 ```
 
 The server name `deepwiki` is not a valid repository name.
-
-See the [issue #8 verification record](cli-verification.md) for the automated and
-live Windows/Groq checks performed on October 10, 2026.

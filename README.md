@@ -5,9 +5,9 @@ abstraction, dynamically discovered MCP tools, and a custom RAG MCP server.
 
 ## Development setup
 
-Python 3.11 or newer is required. The Windows filesystem MCP demo also requires
+Python 3.11 or newer is required. The Windows filesystem MCP integration also requires
 Node.js available on `PATH`. Install the pinned official filesystem server with
-`npm ci` before running the demo or Windows regression tests.
+`npm ci` before running the CLI or Windows regression tests.
 
 ```powershell
 python -m venv .venv
@@ -24,19 +24,18 @@ mypy
 coding-assistant --help
 coding-assistant --provider groq
 coding-assistant --provider groq --task "List the top-level project files using the filesystem tool."
-coding-assistant --connection-demo --task "list tools"
-coding-assistant --demo-loop --task "inspect workspace"
+coding-assistant --provider groq --execution-mode auto --task "List the top-level project files using the filesystem tool."
+coding-assistant --connection-check --task "list tools"
 ```
 
 Install the project and run `npm ci` first, as shown above. Use `/servers`, `/tools`,
 `/help`, and `/exit` at the prompt. The default mode runs the Groq-backed agent;
 set `GROQ_API_KEY` before launching it. `--provider ollama` selects the local provider
-after setting `OLLAMA_MODEL`. `--connection-demo` demonstrates MCP connections and
-tool discovery without an LLM. `--demo-loop` exercises the stateful agent loop with a clearly
-labeled scripted provider and real filesystem calls. Live model-backed coding
-tasks use the selected provider through the shared agent loop.
-See [CLI demo and agent integration](docs/cli.md) and
-[Basic agent loop](docs/agent-loop.md) for options and demo commands. See
+after setting `OLLAMA_MODEL`. `--connection-check` inspects MCP connections and
+tool discovery without an LLM or tool execution. Tool calls require confirmation
+by default; pass `--execution-mode auto` only when automatic execution is intended.
+See [CLI usage and agent integration](docs/cli.md) and
+[Basic agent loop](docs/agent-loop.md) for execution behavior and options. See
 [Ollama provider](docs/ollama-provider.md) for local model setup and
 [Groq Cloud provider](docs/groq-provider.md) for cloud model setup and live usage.
 
@@ -48,7 +47,7 @@ environment before launching the existing agent loop:
 ```powershell
 ollama pull qwen3
 $env:OLLAMA_MODEL = "qwen3"
-coding-assistant --agent coding_assistant.providers.ollama:create_agent
+coding-assistant --provider ollama
 ```
 
 The adapter streams text and supports MCP tool calls through the provider-neutral
@@ -63,7 +62,7 @@ through the same agent interface:
 ```powershell
 $env:GROQ_API_KEY = "your-key"
 $env:GROQ_MODEL = "openai/gpt-oss-20b"  # Optional; this is the default.
-coding-assistant --agent coding_assistant.providers.groq:create_agent
+coding-assistant --provider groq
 ```
 
 The provider streams responses and preserves MCP tool calls and results across
