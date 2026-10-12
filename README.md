@@ -12,7 +12,7 @@ Node.js available on `PATH`. Install the pinned official filesystem server with
 ```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
-python -m pip install -r requirements-dev.txt
+python -m pip install -r requirements-dev.txt -e ".[rag]"
 npm ci
 pytest
 mypy
@@ -133,4 +133,10 @@ Collaboratively develop and document a complete AI application using Git and Git
 Step 1 loads documents, splits token-budgeted chunks, and generates local semantic
 embeddings. Install with `python -m pip install -e ".[rag]"`, then run
 `python -m rag_server.prepare`. See [RAG preparation](docs/rag-preparation.md) for
-the output contract and remaining storage/retrieval stages.
+the output contract.
+
+Step 2 stores those embeddings in Chroma and exposes `rag.search_docs` through MCP.
+Run `python -m rag_server.index` after preparation. The tool returns original
+snippets with source filenames, PDF pages, chunk IDs, and similarity scores.
+See [Chroma storage and retrieval](docs/rag-retrieval.md) for setup, tool options,
+index updates, tests, and retrieval limitations.

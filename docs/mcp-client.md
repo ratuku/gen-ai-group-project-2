@@ -45,6 +45,13 @@ Only send public repository names and non-sensitive questions to DeepWiki. Its
 responses are external, untrusted content and must not be treated as privileged
 instructions.
 
+## Custom RAG server
+
+`config/mcp.json` starts the local RAG server with `python -m rag_server.server`.
+Install the project with `.[rag]`, then run `python -m rag_server.index` to import
+the prepared embeddings. Its `rag.search_docs` tool returns documentation snippets
+with source paths, PDF pages, and similarity scores. See [RAG retrieval](rag-retrieval.md).
+
 ## Configuration
 
 Servers use the conventional `mcpServers` JSON object:

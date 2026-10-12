@@ -42,15 +42,22 @@ class SentenceTransformerEmbedder:
 def embed_chunks(
     chunks: Sequence[DocumentChunk], model: EmbeddingModel, *, batch_size: int = 32,
 ) -> NDArray[np.float32]:
-    if not chunks or batch_size < 1:
-        raise ValueError("Non-empty chunks and a positive batch size are required")
-    if any(model.count_tokens(chunk.text) > model.max_tokens for chunk in chunks):
-        raise ValueError("A chunk exceeds the embedding model's token limit")
+    return embed_texts([chunk.text for chunk in chunks], model, batch_size=batch_size)
+
+
+def embed_texts(
+    texts: Sequence[str], model: EmbeddingModel, *, batch_size: int = 32,
+) -> NDArray[np.float32]:
+    """Use identical validation and normalization for documents and queries."""
+    if not texts or batch_size < 1 or any(not text.strip() for text in texts):
+        raise ValueError("Non-empty texts and a positive batch size are required")
+    if any(model.count_tokens(text) > model.max_tokens for text in texts):
+        raise ValueError("Text exceeds the embedding model's token limit")
     vectors = np.asarray(
-        model.encode([chunk.text for chunk in chunks], batch_size=batch_size),
+        model.encode(list(texts), batch_size=batch_size),
         dtype=np.float32,
     )
-    if vectors.ndim != 2 or vectors.shape[0] != len(chunks) or vectors.shape[1] < 1:
+    if vectors.ndim != 2 or vectors.shape[0] != len(texts) or vectors.shape[1] < 1:
         raise ValueError("Expected one non-empty embedding vector per chunk")
     if not np.isfinite(vectors).all():
         raise ValueError("Embedding vectors must contain only finite values")
