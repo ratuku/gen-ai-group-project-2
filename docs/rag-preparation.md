@@ -2,7 +2,8 @@
 
 This adapts project 1's local SentenceTransformer ingestion design. It loads the
 corpus, splits it, and produces normalized semantic vectors. It does not create a
-vector index, retrieve documents, or start an MCP server yet.
+vector index itself. [Step 2](rag-retrieval.md) imports its output into Chroma
+and exposes retrieval through MCP.
 
 ## Install and run
 
@@ -60,7 +61,7 @@ with np.load("rag_server/artifacts/prepared.npz", allow_pickle=False) as bundle:
     vectors = bundle["embeddings"]
     chunks = json.loads(str(bundle["chunks_json"]))
     manifest = json.loads(str(bundle["manifest_json"]))
-# vectors[i] belongs to chunks[i]; step 2 can add these to FAISS or another store.
+# vectors[i] belongs to chunks[i]; step 2 adds these to Chroma.
 ```
 
 The programmatic entry point `prepare_corpus()` returns the same data in memory;
@@ -72,10 +73,9 @@ configuration changes, and embed queries with the same model used for documents.
 
 The embedding model and answer-generating LLM have separate responsibilities.
 Project 1 uses local SentenceTransformer embeddings and Groq-hosted generation.
-Project 2's `ModelProvider` protocol is the starting point for Ollama and cloud
-adapters; concrete adapters remain separate work. Groq can be the cloud provider.
+Project 2 supports Ollama and Groq through its provider abstraction.
 
-The remaining RAG stages are vector storage, retrieval, and MCP tool exposure.
+[Step 2](rag-retrieval.md) implements vector storage, retrieval, and MCP tool exposure.
 Ordinary splitting and dense retrieval do not by themselves fulfill the advanced
 RAG requirement. A later step can add cross-encoder reranking: retrieve candidate
 chunks, score their relevance to the question, and return the best few. Evaluate

@@ -10,6 +10,16 @@
     "deepwiki": {
       "url": "https://mcp.deepwiki.com/mcp",
       "timeoutSeconds": 60
+    },
+    "rag": {
+      "command": "python",
+      "args": [
+        "-m",
+        "rag_server.server",
+        "--store",
+        "${configDir}/../rag_server/artifacts/chroma"
+      ],
+      "timeoutSeconds": 120
     }
   }
 }

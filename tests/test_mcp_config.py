@@ -58,8 +58,8 @@ def test_committed_servers_configure_filesystem_and_external_resource() -> None:
     config = load_mcp_config(project_root / "config" / "mcp.json")
 
     assert config.workspace_root == project_root
-    assert len(config.servers) == 2
-    filesystem, deepwiki = config.servers
+    assert len(config.servers) == 3
+    filesystem, deepwiki, rag = config.servers
     assert filesystem.name == "filesystem"
     assert filesystem.command == "node"
     assert filesystem.args == (
@@ -72,6 +72,11 @@ def test_committed_servers_configure_filesystem_and_external_resource() -> None:
     assert deepwiki.transport == "http"
     assert deepwiki.url == "https://mcp.deepwiki.com/mcp"
     assert deepwiki.timeout_seconds == 60
+    assert rag.name == "rag"
+    assert rag.command == "python"
+    assert rag.args == ("-m", "rag_server.server", "--store",
+                        f"{project_root / 'config'}/../rag_server/artifacts/chroma")
+    assert rag.timeout_seconds == 120
 
 
 @pytest.mark.parametrize(

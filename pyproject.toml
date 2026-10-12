@@ -22,6 +22,7 @@ coding-assistant = "coding_assistant.cli.app:main"
 
 [project.optional-dependencies]
 rag = [
+    "chromadb>=1.0,<2",
     "numpy>=1.26,<2.4",
     "pypdf>=6,<7",
     "fonttools>=4.50,<5",
@@ -53,6 +54,7 @@ files = ["src", "rag_server", "tests"]
 [[tool.mypy.overrides]]
 module = [
     "echo_mcp_server",
+    "rag_server.server",
     "test_architecture",
     "test_execution_policy",
     "test_mcp_client",
@@ -61,6 +63,7 @@ module = [
     "test_ollama_provider",
     "test_filesystem_mcp_windows",
     "test_rag_preparation",
+    "test_rag_retrieval",
     "test_cli",
     "test_agent_loop",
 ]
