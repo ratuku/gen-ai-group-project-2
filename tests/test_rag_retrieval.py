@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import replace
 import json
 from pathlib import Path
@@ -192,7 +193,7 @@ async def test_real_mcp_retrieval_returns_relevant_traceable_results(tmp_path: P
         listing = await client.list_tools()
         assert [tool.name for tool in listing.tools] == ["search_docs"]
         for query, expected in (("paths", "path-1"), ("coroutines", "async-1"), ("cache", "cache-1")):
-            result = await client.call_tool("search_docs", {"query": query, "top_k": 1})
+            result = await client.call_tool("search_docs", {"query": query, "top_k": 1, "mode": "cosine"})
             assert not result.is_error
             assert result.structured_content is not None
             payload = result.structured_content
@@ -216,3 +217,155 @@ async def test_missing_index_allows_discovery_but_returns_actionable_tool_error(
         result = await client.call_tool("search_docs", {"query": "paths"})
         assert result.is_error
         assert "rag_server.index" in str(result.content)
+
+
+class PairScorer:
+    """Replace model inference only, keeping the real retrieval/MCP path."""
+
+    model_name = "test-pair-scorer"
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, list[str]]] = []
+
+    def score(self, query: str, texts: Sequence[str]) -> list[float]:
+        self.calls.append((query, list(texts)))
+        return [8.0 if "Path.read_text" in text else -2.0 for text in texts]
+
+
+@pytest.fixture
+def ambiguous_store(tmp_path: Path) -> Path:
+    chunks = [
+        DocumentChunk("distractor", "Release notes: pathlib tools renamed.", "notes.txt", None, 0),
+        DocumentChunk("answer", "Use pathlib.Path.read_text() to read a file as a string.", "Python.pdf", 9, 2),
+        DocumentChunk("other", "Run async coroutines concurrently.", "async.txt", None, 0),
+    ]
+    vectors = np.array([[1, 0, 0, 0], [0.8, 0.6, 0, 0], [0, 1, 0, 0]], dtype=np.float32)
+    prepared = tmp_path / "ambiguous.npz"
+    save_prepared_corpus(PreparedCorpus(chunks, vectors, 3, TinyEncoder.model_name, 100, 10), prepared)
+    store = tmp_path / "ambiguous-store"
+    build_index(prepared, store)
+    return store
+
+
+def test_reranking_promotes_candidate_outside_baseline_top_k_and_preserves_evidence(ambiguous_store: Path) -> None:
+    scorer = PairScorer()
+    retriever = Retriever(ambiguous_store, embedding_model=TinyEncoder(), reranker=scorer)
+    baseline = retriever.search("read a file", top_k=1)
+    assert baseline[0].chunk_id == "distractor"
+    assert baseline[0].rerank_score is None
+    assert scorer.calls == []
+    candidates = retriever.search("read a file", top_k=2)
+    advanced = retriever.search("read a file", top_k=1, mode="rerank", candidate_k=2)
+    assert advanced[0] == replace(candidates[1], rerank_score=8.0)
+    assert (advanced[0].source, advanced[0].page, advanced[0].chunk_index) == ("Python.pdf", 9, 2)
+    assert advanced[0].similarity == pytest.approx(0.8)
+    assert scorer.calls == [("read a file", [f"Source: {hit.source}\n\n{hit.text}" for hit in candidates])]
+    # A candidate never retrieved cannot be rescued by the second stage.
+    assert retriever.search("read a file", top_k=1, mode="rerank", candidate_k=1)[0].chunk_id == "distractor"
+
+
+def test_reranking_respects_filters_empty_results_and_small_corpus(ambiguous_store: Path) -> None:
+    scorer = PairScorer()
+    retriever = Retriever(ambiguous_store, embedding_model=TinyEncoder(), reranker=scorer)
+    matches = retriever.search("file", mode="rerank", source="Python.pdf")
+    assert [hit.chunk_id for hit in matches] == ["answer"]
+    assert len(scorer.calls[0][1]) == 1
+    assert retriever.search("file", mode="rerank", source="absent.txt") == []
+    assert len(scorer.calls) == 1
+    matches = retriever.search("file", mode="rerank", min_similarity=0.9)
+    assert [hit.chunk_id for hit in matches] == ["distractor"]
+    assert len(scorer.calls[-1][1]) == 1
+    assert len(retriever.search("file", mode="rerank", top_k=20, candidate_k=100)) == 3
+
+
+@pytest.mark.parametrize("candidate_k", [0, 1, 101, True, 2.5])
+def test_invalid_candidate_pool(ambiguous_store: Path, candidate_k: int) -> None:
+    retriever = Retriever(ambiguous_store, embedding_model=TinyEncoder(), reranker=PairScorer())
+    with pytest.raises(ValueError, match="candidate_k"):
+        retriever.search("file", top_k=2, candidate_k=candidate_k, mode="rerank")
+
+
+@pytest.mark.parametrize("scores", [[1.0], [float("nan"), 0.0], [float("inf"), 0.0]])
+def test_invalid_rerank_scores_fail_without_silent_fallback(ambiguous_store: Path, scores: list[float]) -> None:
+    class InvalidScorer(PairScorer):
+        def score(self, query: str, texts: Sequence[str]) -> list[float]:
+            return scores
+    retriever = Retriever(ambiguous_store, embedding_model=TinyEncoder(), reranker=InvalidScorer())
+    with pytest.raises(ValueError, match="one finite rerank score"):
+        retriever.search("file", top_k=1, candidate_k=2, mode="rerank")
+    assert retriever.search("file", top_k=1, mode="cosine")[0].chunk_id == "distractor"
+
+
+def test_rerank_ties_keep_cosine_order(ambiguous_store: Path) -> None:
+    class TiedScorer(PairScorer):
+        def score(self, query: str, texts: Sequence[str]) -> list[float]:
+            return [-1.0] * len(texts)
+    retriever = Retriever(ambiguous_store, embedding_model=TinyEncoder(), reranker=TiedScorer())
+    assert [hit.chunk_id for hit in retriever.search("file", mode="rerank")] == [
+        "distractor", "answer", "other",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_mcp_default_reranking_and_explicit_baseline(ambiguous_store: Path) -> None:
+    scorer = PairScorer()
+    async with Client(create_server(ambiguous_store, embedding_model=TinyEncoder(), reranker=scorer)) as client:
+        tool = (await client.list_tools()).tools[0]
+        assert tool.input_schema["properties"]["mode"]["default"] == "rerank"
+        for mode, expected in (("cosine", "distractor"), ("rerank", "answer")):
+            args: dict[str, object] = {"query": "read a file", "top_k": 1, "candidate_k": 2}
+            if mode == "cosine":
+                args["mode"] = mode
+            response = await client.call_tool("search_docs", args)
+            assert not response.is_error
+            payload = response.structured_content
+            assert payload is not None
+            assert payload["mode"] == mode
+            assert payload["ranking_score"] == ("similarity" if mode == "cosine" else "rerank_score")
+            assert payload["reranker_model"] == (None if mode == "cosine" else scorer.model_name)
+            assert payload["results"][0]["chunk_id"] == expected
+        assert len(scorer.calls) == 1
+        invalid_inputs: list[dict[str, object]] = [
+            {"query": "file", "mode": "invalid"}, {"query": "file", "candidate_k": 0},
+        ]
+        for invalid_args in invalid_inputs:
+            assert (await client.call_tool("search_docs", invalid_args)).is_error
+
+
+@pytest.mark.asyncio
+async def test_mcp_reranker_failure_is_actionable_and_baseline_still_works(ambiguous_store: Path) -> None:
+    class BrokenScorer(PairScorer):
+        def score(self, query: str, texts: Sequence[str]) -> list[float]:
+            raise OSError("Model unavailable")
+    async with Client(create_server(ambiguous_store, embedding_model=TinyEncoder(), reranker=BrokenScorer())) as client:
+        result = await client.call_tool("search_docs", {"query": "file"})
+        assert result.is_error
+        assert "mode='cosine'" in str(result.content)
+        result = await client.call_tool("search_docs", {"query": "file", "mode": "cosine"})
+        assert not result.is_error
+
+
+def test_cross_encoder_adapter_loads_once_and_scores_query_passage_pairs(monkeypatch: pytest.MonkeyPatch) -> None:
+    import sys
+    from types import SimpleNamespace
+    from rag_server.retrieval.rerank import CrossEncoderReranker
+
+    constructors: list[str] = []
+    pairs_seen: list[list[tuple[str, str]]] = []
+    class FakeCrossEncoder:
+        def __init__(self, model_name: str, **kwargs: object) -> None:
+            constructors.append(model_name)
+            assert kwargs["trust_remote_code"] is False
+        def predict(self, pairs: list[tuple[str, str]], **kwargs: object) -> list[float]:
+            pairs_seen.append(pairs)
+            assert kwargs["show_progress_bar"] is False
+            return [2.0] * len(pairs)
+    monkeypatch.setitem(sys.modules, "sentence_transformers", SimpleNamespace(CrossEncoder=FakeCrossEncoder))
+    reranker = CrossEncoderReranker("test-model")
+    assert constructors == []
+    assert reranker.score("question", []) == []
+    assert constructors == []
+    assert reranker.score("question", ["passage", "another"]) == [2.0, 2.0]
+    assert reranker.score("next", ["last"]) == [2.0]
+    assert constructors == ["test-model"]
+    assert pairs_seen == [[("question", "passage"), ("question", "another")], [("next", "last")]]

@@ -139,3 +139,16 @@ Run `python -m rag_server.index` after preparation. The tool returns original
 snippets with source filenames, PDF pages, chunk IDs, and similarity scores.
 See [Chroma storage and retrieval](docs/rag-retrieval.md) for setup, tool options,
 index updates, tests, and retrieval limitations.
+
+## Advanced RAG retrieval
+
+`rag.search_docs` now reranks cosine candidates with a local cross-encoder by
+default. Use `mode="cosine"` for the original baseline. No re-indexing is needed.
+Compare both modes through the real MCP server with:
+
+```sh
+python -m rag_server.compare --query "How do I register a tool on a FastMCP server?"
+```
+
+See [Reranking and baseline comparison](docs/rag-reranking.md) for configuration,
+model downloads, score interpretation, tests, and limitations.
