@@ -1,0 +1,17 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "chunks": 10,
+  "delta_fields": {
+    "content": 1,
+    "role": 1,
+    "reasoning": 7,
+    "channel": 7,
+    "tool_calls": 1
+  },
+  "finish_reasons": [
+    "tool_calls"
+  ],
+  "content_characters": 0,
+  "reasoning_characters": 31,
+  "tool_fragments": 1
+}

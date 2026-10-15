@@ -1,0 +1,34 @@
+[
+  {
+    "path": "workspaces/model-1/bugfix-1/solution.py",
+    "sha256": "e0f13e94fe2243bfe312db3e8ef169c64cb174fdb392a7d1ab30ce8eb11942fe"
+  },
+  {
+    "path": "workspaces/model-1/documentation-1/solution.py",
+    "sha256": "b2fbe9438eadabf538ebfc3fd719a792c6d8eef9c5790b4d3fc46073ec77e6a7"
+  },
+  {
+    "path": "workspaces/model-1/feature-1/solution.py",
+    "sha256": "7234201772f8ea8c6733d5eff04911ed8436d426dad9fc01073019119625a694"
+  },
+  {
+    "path": "workspaces/model-1/refactor-1/solution.py",
+    "sha256": "b0f3e2d15c041a00d6a4f7ebfeaccad4c4a53f54a88748d00cb423aacad0c7a3"
+  },
+  {
+    "path": "workspaces/model-2/bugfix-1/solution.py",
+    "sha256": "110934358c903e1dd7e6752bcd613817a8a1a57b35b3917022c8c13df166428a"
+  },
+  {
+    "path": "workspaces/model-2/documentation-1/solution.py",
+    "sha256": "b2fbe9438eadabf538ebfc3fd719a792c6d8eef9c5790b4d3fc46073ec77e6a7"
+  },
+  {
+    "path": "workspaces/model-2/feature-1/solution.py",
+    "sha256": "58f9cad3e14da6b0e641513896640c448c9b2622e5d4b6bc416bdb4b75df7f3d"
+  },
+  {
+    "path": "workspaces/model-2/refactor-1/solution.py",
+    "sha256": "33b5e8401a3aeacde157b5a876b7823eba534dd149eb1c21eaac098da4178d3d"
+  }
+]

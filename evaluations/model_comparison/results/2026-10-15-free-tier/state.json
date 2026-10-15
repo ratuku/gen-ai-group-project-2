@@ -1,0 +1,6 @@
+{
+  "status": "paused_provider_capacity",
+  "planned": 8,
+  "attempted_slots": 3,
+  "resume": true
+}

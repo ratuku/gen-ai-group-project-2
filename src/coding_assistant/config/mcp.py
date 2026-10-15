@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
@@ -43,9 +44,10 @@ def load_mcp_config(
 ) -> MCPConfig:
     """Load a conventional ``mcpServers`` JSON object.
 
-    The ``${workspaceRoot}`` placeholder is expanded in stdio arguments,
+    The ``${workspaceRoot}`` placeholder is expanded in stdio commands, arguments,
     environment values, and working directories. ``${configDir}`` expands to the
-    configuration file directory in the same fields. An empty server object is valid
+    configuration file directory in the same fields. ``${pythonExecutable}`` uses
+    the interpreter running the assistant. An empty server object is valid
     while integrations are added by later issues.
     """
 
@@ -123,7 +125,7 @@ def _parse_server(
     def expand(value: str) -> str:
         return value.replace("${configDir}", str(config_dir)).replace(
             "${workspaceRoot}", workspace_text
-        )
+        ).replace("${pythonExecutable}", sys.executable)
 
     raw_cwd = _optional_string(raw.get("cwd"), name=name, field_name="cwd")
     cwd = workspace_root
@@ -140,7 +142,7 @@ def _parse_server(
 
     return ServerConfig(
         name=name,
-        command=command,
+        command=expand(command) if command is not None else None,
         args=tuple(expand(value) for value in raw_args),
         url=url,
         env={key: expand(value) for key, value in raw_env.items()},

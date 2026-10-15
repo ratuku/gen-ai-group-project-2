@@ -1,0 +1,67 @@
+[
+  {
+    "model": "openai/gpt-oss-20b",
+    "attempts": 12,
+    "passes": 4,
+    "code_checks_passed": 4,
+    "median_seconds": 52.408,
+    "tool_calls": 51,
+    "tool_errors": 26,
+    "completion_reasons": {
+      "error": 6,
+      "answered": 4,
+      "iteration_limit": 2
+    },
+    "tasks": {
+      "bugfix": {
+        "passes": 1,
+        "code_checks_passed": 1
+      },
+      "feature": {
+        "passes": 3,
+        "code_checks_passed": 3
+      },
+      "refactor": {
+        "passes": 0,
+        "code_checks_passed": 0
+      },
+      "documentation": {
+        "passes": 0,
+        "code_checks_passed": 0
+      }
+    }
+  },
+  {
+    "model": "openai/gpt-oss-120b",
+    "attempts": 12,
+    "passes": 1,
+    "code_checks_passed": 3,
+    "median_seconds": 50.437,
+    "tool_calls": 65,
+    "tool_errors": 49,
+    "completion_reasons": {
+      "error": 6,
+      "iteration_limit": 4,
+      "missing": 1,
+      "answered": 1
+    },
+    "tasks": {
+      "bugfix": {
+        "passes": 1,
+        "code_checks_passed": 1
+      },
+      "feature": {
+        "passes": 0,
+        "code_checks_passed": 0
+      },
+      "refactor": {
+        "passes": 0,
+        "code_checks_passed": 2
+      },
+      "documentation": {
+        "passes": 0,
+        "code_checks_passed": 0
+      }
+    }
+  }
+]

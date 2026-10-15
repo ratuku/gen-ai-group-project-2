@@ -49,7 +49,8 @@ python_version = "3.11"
 strict = true
 follow_imports = "skip"
 mypy_path = "src"
-files = ["src", "rag_server", "tests"]
+files = ["src", "rag_server", "tests", "evaluations/model_comparison"]
+exclude = ["evaluations/model_comparison/(local|results)/"]
 
 [[tool.mypy.overrides]]
 module = [
@@ -59,7 +60,9 @@ module = [
     "test_execution_policy",
     "test_mcp_client",
     "test_mcp_config",
+    "test_model_comparison",
     "test_groq_provider",
+    "test_groq_recovery",
     "test_ollama_provider",
     "test_filesystem_mcp_windows",
     "test_rag_preparation",

@@ -1,0 +1,31 @@
+{
+  "max_attempts": 5,
+  "request_budget_bytes": 18000,
+  "temperature": 0,
+  "gpt_oss_reasoning": "low",
+  "max_completion_tokens": 2048,
+  "tests_passed": 228,
+  "mypy_files": 56,
+  "source_sha256": {
+    "src/coding_assistant/__init__.py": "a53ae21679bd71d4cd08d6471262a14140dbeb6785dae7bc6646909448f4c19c",
+    "src/coding_assistant/agent/__init__.py": "e05fc8faffeacc40e43e34c79c7bb66966bbdad4f6aaa244fe5bbb41c7ab5042",
+    "src/coding_assistant/agent/loop.py": "e508e16431a1f034456caf79803eb9232f4e3caced3ddb45becc8442051c368d",
+    "src/coding_assistant/cli/__init__.py": "e7e5536ad4782ac7ff2e25c07977e98209328ca1ef179c8413513f9e79c13830",
+    "src/coding_assistant/cli/__main__.py": "61fe272ca95624ebd190dd98301359e3abfb139668f5bf549d75d20cee8ab458",
+    "src/coding_assistant/cli/app.py": "b44e3510d225c17f518fbb926f3113d14ba2deb71f56d75dcff3c079ceee8328",
+    "src/coding_assistant/cli/display.py": "d4c2c53ac0e3900a5033a7297c15ad92432ea0b3e0969878255ec0e8841e3e8d",
+    "src/coding_assistant/config/__init__.py": "4f4a333119574f8c19e2b73b8614d7790fa88cc988d855bbdcca9d53e95bc24d",
+    "src/coding_assistant/config/mcp.py": "58573bb814384b8a4c3a8c5b5755a583d7b2877714daf67364c914f37d535efc",
+    "src/coding_assistant/contracts/__init__.py": "9b546eace2eb8d88efc5adcdbf9a5ad9c8864b3885c581a0e28a018b4655b90e",
+    "src/coding_assistant/contracts/protocols.py": "d79aed58f726eed39404559c59b30a125467941e67a45d8f1c9bfaf2569d5b48",
+    "src/coding_assistant/execution/__init__.py": "68d2761a4cb96e2c27ea611fc0e9a7a1479b101d497120718e638167a3009407",
+    "src/coding_assistant/execution/dispatcher.py": "41c399cd91668f8eb71515f97507c9a78e97d6f5c9bc83ee33ebc1e2fe9ff293",
+    "src/coding_assistant/execution/policy.py": "a4c2f510a678f57cf77e46ee45e69858fc74aeb3cd3ea10ee6215ed90fbaafca",
+    "src/coding_assistant/mcp/__init__.py": "ae567c86aab5b6f5e89ba934c906028c9c8094c2545d27fa3d7a439e732a008d",
+    "src/coding_assistant/mcp/client.py": "0f4b9c48fd8bf3a26af5ee2b450d66008c855431f67a06b63098f4df87276740",
+    "src/coding_assistant/providers/__init__.py": "5a37a57169983549052ccfa701e09442d4fedc104f58152b17ae6d235fe164a1",
+    "src/coding_assistant/providers/groq.py": "f06925cd1dd3be941fc0c6912708a41c8a978c670d4b53e09bd24df529a8972c",
+    "src/coding_assistant/providers/groq_context.py": "9d23991709a0d797783046296789abbaa76e6f514195f5b6c84693b5aeae733f",
+    "src/coding_assistant/providers/ollama.py": "5c05c95fa82892574735abc9e2f2c7d452b7ef3b05c592172024f190d8795a64"
+  }
+}

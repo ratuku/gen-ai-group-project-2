@@ -9,6 +9,8 @@ from pathlib import Path
 import pytest
 
 from coding_assistant.agent import BasicAgentLoop
+from coding_assistant.agent.validation import python_edit_path, syntax_check
+from coding_assistant.execution import PolicyMCPClient
 from coding_assistant.config import ServerConfig
 from coding_assistant.contracts import AgentLoop, Payload
 from coding_assistant.mcp import MCPClient as ConcreteMCPClient
@@ -46,6 +48,43 @@ class DeterministicProvider:
         self.requests.append((deepcopy(messages), deepcopy(tools)))
         for event in next(self.turns):
             yield event
+
+
+def test_python_validation_does_not_execute_source_or_claim_behavioral_tests() -> None:
+    result = syntax_check("source.py", {"is_error": False, "content": [
+        {"type": "text", "text": "raise RuntimeError('must not execute')\n"}]})
+    assert result["passed"] is True
+    assert "Behavioral tests were not run" in str(result["detail"])
+    assert syntax_check("source.py", {"is_error": True, "content": "permission denied"})["passed"] is False
+    assert python_edit_path("filesystem.edit_file", {"path": "x.py", "dryRun": True}) is None
+    assert python_edit_path("other.write_file", {"path": "x.py"}) is None
+
+
+@pytest.mark.asyncio
+async def test_automatic_syntax_read_respects_confirmation_policy() -> None:
+    class WritableClient(FakeMCPClient):
+        async def list_tools(self) -> Sequence[Payload]:
+            return [*(await super().list_tools()), {"name": "filesystem.write_file", "input_schema": {
+                "type": "object", "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+                "required": ["path", "content"]}}]
+
+    client = WritableClient()
+    approvals: list[str] = []
+
+    async def approve(name: str, arguments: Payload) -> bool:
+        approvals.append(name)
+        return name == "filesystem.write_file"
+
+    policy = PolicyMCPClient(client, mode="confirm", approve=approve)
+    provider = DeterministicProvider([
+        [{"type": "tool_call", "name": "filesystem.write_file", "arguments": {"path": "x.py", "content": "pass"}}],
+        [{"type": "text", "content": "Done"}],
+    ])
+    events = [e async for e in BasicAgentLoop(provider, policy).run("Write Python")]
+    assert approvals == ["filesystem.write_file", "filesystem.read_text_file"]
+    assert [name for name, _ in client.calls] == ["filesystem.write_file"]
+    assert events[-1]["reason"] == "validation_failed"
+    assert "unverified" in str(events[-2])
 
 
 def tool(name: str, **arguments: object) -> Payload:

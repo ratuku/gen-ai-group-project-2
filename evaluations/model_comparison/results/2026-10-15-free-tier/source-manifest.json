@@ -1,0 +1,14 @@
+{
+  "workspaces/model-1/bugfix-1-attempt-1/solution.py": {
+    "original_sha256": "9c04e2b48e2328ca796d5f83148608c869cccb7ed4d477b37a42fff98ec1b77d",
+    "published_sha256": "9c04e2b48e2328ca796d5f83148608c869cccb7ed4d477b37a42fff98ec1b77d"
+  },
+  "workspaces/model-2/bugfix-1-attempt-1/solution.py": {
+    "original_sha256": "110934358c903e1dd7e6752bcd613817a8a1a57b35b3917022c8c13df166428a",
+    "published_sha256": "110934358c903e1dd7e6752bcd613817a8a1a57b35b3917022c8c13df166428a"
+  },
+  "workspaces/model-1/feature-1-attempt-1/solution.py": {
+    "original_sha256": "7234201772f8ea8c6733d5eff04911ed8436d426dad9fc01073019119625a694",
+    "published_sha256": "7234201772f8ea8c6733d5eff04911ed8436d426dad9fc01073019119625a694"
+  }
+}

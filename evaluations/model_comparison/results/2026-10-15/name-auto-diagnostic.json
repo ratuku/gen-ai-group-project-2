@@ -1,0 +1,46 @@
+[
+  {
+    "model": "openai/gpt-oss-20b",
+    "choice_mode": "auto",
+    "supplied_name": "filesystem.read_text_file",
+    "returned_names": [
+      "filesystem.read_text_file"
+    ],
+    "finish_reasons": [
+      "tool_calls"
+    ]
+  },
+  {
+    "model": "openai/gpt-oss-20b",
+    "choice_mode": "auto",
+    "supplied_name": "filesystem_read_text_file",
+    "returned_names": [
+      "filesystem_read_text_file"
+    ],
+    "finish_reasons": [
+      "tool_calls"
+    ]
+  },
+  {
+    "model": "openai/gpt-oss-120b",
+    "choice_mode": "auto",
+    "supplied_name": "filesystem.read_text_file",
+    "returned_names": [
+      "filesystem.read_text_file"
+    ],
+    "finish_reasons": [
+      "tool_calls"
+    ]
+  },
+  {
+    "model": "openai/gpt-oss-120b",
+    "choice_mode": "auto",
+    "supplied_name": "filesystem_read_text_file",
+    "returned_names": [
+      "filesystem_read_text_file"
+    ],
+    "finish_reasons": [
+      "tool_calls"
+    ]
+  }
+]

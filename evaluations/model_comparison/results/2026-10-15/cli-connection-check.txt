@@ -1,0 +1,33 @@
+Secure MCP Filesystem Server running on stdio
+Client does not support MCP Roots, using allowed directories set from server args: [ '${PROJECT_ROOT}' ]
+Connected to 3 MCP server(s):
+  filesystem: 14 tool(s)
+  deepwiki: 3 tool(s)
+  rag: 1 tool(s)
+Connection check only; no model or tool execution.
+Juniper | AI Coding Assistant
+Workspace  ${PROJECT_ROOT}
+Provider   Connection check
+Model      No LLM
+MCP        3 connected server(s)
+Version    0.1.0
+Execution  Connection discovery only
+  filesystem.read_file - Read the complete contents of a file as text. DEPRECATED: Use read_text_file instead.
+  filesystem.read_text_file - Read the complete contents of a file from the file system as text. Handles various text [...]
+  filesystem.read_media_file - Read a file and return it as a base64-encoded content block with its MIME type. Image and [...]
+  filesystem.read_multiple_files - Read the contents of multiple files simultaneously. This is more efficient than reading files [...]
+  filesystem.write_file - Create a new file or completely overwrite an existing file with new content. Use with caution [...]
+  filesystem.edit_file - Make line-based edits to a text file. Each edit replaces exact line sequences with new [...]
+  filesystem.create_directory - Create a new directory or ensure a directory exists. Can create multiple nested directories in [...]
+  filesystem.list_directory - Get a detailed listing of all files and directories in a specified path. Results clearly [...]
+  filesystem.list_directory_with_sizes - Get a detailed listing of all files and directories in a specified path, including sizes. [...]
+  filesystem.directory_tree - Get a recursive tree view of files and directories as a JSON structure. Each entry includes [...]
+  filesystem.move_file - Move or rename files and directories. Can move files between directories and rename them in a [...]
+  filesystem.search_files - Recursively search for files and directories matching a pattern. The patterns should be glob- [...]
+  filesystem.get_file_info - Retrieve detailed metadata about a file or directory. Returns comprehensive information [...]
+  filesystem.list_allowed_directories - Returns the list of directories that this server is allowed to access. Subdirectories within [...]
+  deepwiki.ask_wiki_question - Ask any question about a GitHub repository's codebase and get an AI-powered answer grounded in [...]
+  deepwiki.read_wiki_contents - View documentation about a GitHub repository.
+  deepwiki.read_wiki_structure - Get a list of documentation topics for a GitHub repository.
+  rag.search_docs - Search programming documentation by meaning. Return original snippets, source filenames, PDF [...]
+[Done]

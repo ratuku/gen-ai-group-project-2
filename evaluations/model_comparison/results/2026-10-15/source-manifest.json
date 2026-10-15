@@ -1,0 +1,98 @@
+[
+  {
+    "path": "workspaces/model-1/bugfix-1/solution.py",
+    "sha256": "34d980d3caeb14d26ec518af391cd437a12ca1c5c112a72fd5f69e1ca7674bb1"
+  },
+  {
+    "path": "workspaces/model-1/bugfix-2/solution.py",
+    "sha256": "34d980d3caeb14d26ec518af391cd437a12ca1c5c112a72fd5f69e1ca7674bb1"
+  },
+  {
+    "path": "workspaces/model-1/bugfix-3/solution.py",
+    "sha256": "964c72a26c131831dea999194473e0a2a0e070c5f6e2d0a0499c0cce9e0305b4"
+  },
+  {
+    "path": "workspaces/model-1/documentation-1/solution.py",
+    "sha256": "b2fbe9438eadabf538ebfc3fd719a792c6d8eef9c5790b4d3fc46073ec77e6a7"
+  },
+  {
+    "path": "workspaces/model-1/documentation-2/solution.py",
+    "sha256": "b2fbe9438eadabf538ebfc3fd719a792c6d8eef9c5790b4d3fc46073ec77e6a7"
+  },
+  {
+    "path": "workspaces/model-1/documentation-3/solution.py",
+    "sha256": "b2fbe9438eadabf538ebfc3fd719a792c6d8eef9c5790b4d3fc46073ec77e6a7"
+  },
+  {
+    "path": "workspaces/model-1/feature-1/solution.py",
+    "sha256": "de507c3a56d35e53b1486676d39c1262065fff4d38ea341f6f154169e0e652cf"
+  },
+  {
+    "path": "workspaces/model-1/feature-2/solution.py",
+    "sha256": "bd3d60320591bd53028699ba9221fe83f2c5a89155a5ab6ac25a8c5ea85e16be"
+  },
+  {
+    "path": "workspaces/model-1/feature-3/solution.py",
+    "sha256": "7472d0eed35ee370d79ee858a3c8f3a25c12953bb339a148bff5fe5bf1271c9d"
+  },
+  {
+    "path": "workspaces/model-1/refactor-1/solution.py",
+    "sha256": "b0f3e2d15c041a00d6a4f7ebfeaccad4c4a53f54a88748d00cb423aacad0c7a3"
+  },
+  {
+    "path": "workspaces/model-1/refactor-2/solution.py",
+    "sha256": "b0f3e2d15c041a00d6a4f7ebfeaccad4c4a53f54a88748d00cb423aacad0c7a3"
+  },
+  {
+    "path": "workspaces/model-1/refactor-3/solution.py",
+    "sha256": "b0f3e2d15c041a00d6a4f7ebfeaccad4c4a53f54a88748d00cb423aacad0c7a3"
+  },
+  {
+    "path": "workspaces/model-2/bugfix-1/solution.py",
+    "sha256": "34d980d3caeb14d26ec518af391cd437a12ca1c5c112a72fd5f69e1ca7674bb1"
+  },
+  {
+    "path": "workspaces/model-2/bugfix-2/solution.py",
+    "sha256": "34d980d3caeb14d26ec518af391cd437a12ca1c5c112a72fd5f69e1ca7674bb1"
+  },
+  {
+    "path": "workspaces/model-2/bugfix-3/solution.py",
+    "sha256": "0211b3e175c0e866b5a816bb2458de1698a200169f0b522b1fd0cc97419491b7"
+  },
+  {
+    "path": "workspaces/model-2/documentation-1/solution.py",
+    "sha256": "b2fbe9438eadabf538ebfc3fd719a792c6d8eef9c5790b4d3fc46073ec77e6a7"
+  },
+  {
+    "path": "workspaces/model-2/documentation-2/solution.py",
+    "sha256": "b2fbe9438eadabf538ebfc3fd719a792c6d8eef9c5790b4d3fc46073ec77e6a7"
+  },
+  {
+    "path": "workspaces/model-2/documentation-3/solution.py",
+    "sha256": "b2fbe9438eadabf538ebfc3fd719a792c6d8eef9c5790b4d3fc46073ec77e6a7"
+  },
+  {
+    "path": "workspaces/model-2/feature-1/solution.py",
+    "sha256": "7234201772f8ea8c6733d5eff04911ed8436d426dad9fc01073019119625a694"
+  },
+  {
+    "path": "workspaces/model-2/feature-2/solution.py",
+    "sha256": "7234201772f8ea8c6733d5eff04911ed8436d426dad9fc01073019119625a694"
+  },
+  {
+    "path": "workspaces/model-2/feature-3/solution.py",
+    "sha256": "7234201772f8ea8c6733d5eff04911ed8436d426dad9fc01073019119625a694"
+  },
+  {
+    "path": "workspaces/model-2/refactor-1/solution.py",
+    "sha256": "3bdcf8183ab6f128a006805d2f9f2926922747d20951571d53ef6bc60f2e4705"
+  },
+  {
+    "path": "workspaces/model-2/refactor-2/solution.py",
+    "sha256": "b1b2ae242857dc5b35a8ba6ff1a48eabd27552299b8fa7a010c7e03fa74c8c69"
+  },
+  {
+    "path": "workspaces/model-2/refactor-3/solution.py",
+    "sha256": "b0f3e2d15c041a00d6a4f7ebfeaccad4c4a53f54a88748d00cb423aacad0c7a3"
+  }
+]

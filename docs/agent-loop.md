@@ -9,7 +9,8 @@ conversation history and repeatedly asks a `ModelProvider` what to do next:
 3. Collect the assistant's text and complete tool-call events.
 4. Validate requested tool names and arguments.
 5. Route valid calls through the configured execution policy and MCP client.
-6. Append every tool result and request the next model turn.
+6. Append every tool result, check saved Python syntax after edits, and request
+   the next model turn.
 7. Finish with the model's nonempty final response, or report the iteration limit.
 
 The default limit is eight model requests per user task. Multiple tool calls in a
@@ -46,7 +47,24 @@ with `name`, object `arguments`, and optional string `id`, and optionally a
 it also contains a completed marker. Ending a response with nonempty text and no
 tool calls is a final answer. Empty responses and provider errors become readable
 failure events. The loop emits exactly one final `completed` event on normal or
-handled-error exit, with reason `answered`, `iteration_limit`, or `error`.
+handled-error exit, with reason `answered`, `iteration_limit`, `validation_failed`,
+or `error`. Provider error codes and status wait metadata are preserved.
+
+## Saved Python validation
+
+After successful `filesystem.write_file` or non-dry-run `filesystem.edit_file`
+operations on `.py`/`.pyi` paths, the loop reads the saved file through the same
+dispatcher and execution policy. Each edited path is checked once per model turn.
+These reads are visible tool calls with `origin=validation`; they may require
+approval in confirmation mode. Python's AST parser checks syntax without importing
+or executing the source. Its result is attached to the read's tool result, retained
+in history, and summarized in status output. Failed syntax can be repaired on a
+later model turn. A final answer cannot produce normal completion while syntax
+is invalid or unverified; denial or missing read support is never a syntax pass.
+
+Validation does not discover/run tests, evaluate requirements, or guarantee
+behavior. Non-Python edits and dry runs are not checked by this mechanism. The
+model comparison's hidden behavioral checks remain outside the model conversation.
 
 History is provider-neutral:
 

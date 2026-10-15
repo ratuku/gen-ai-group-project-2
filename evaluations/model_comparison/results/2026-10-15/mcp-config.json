@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "node",
+      "args": [
+        "${PROJECT_ROOT}\\config/../node_modules/@modelcontextprotocol/server-filesystem/dist/index.js",
+        "${workspaceRoot}"
+      ]
+    },
+    "deepwiki": {
+      "url": "https://mcp.deepwiki.com/mcp",
+      "timeoutSeconds": 60,
+      "args": []
+    },
+    "rag": {
+      "command": "${PROJECT_ROOT}\\.venv\\Scripts\\python.exe",
+      "args": [
+        "-m",
+        "rag_server.server",
+        "--store",
+        "${PROJECT_ROOT}\\config/../rag_server/artifacts/chroma"
+      ],
+      "timeoutSeconds": 120,
+      "env": {
+        "HF_HUB_OFFLINE": "1"
+      }
+    }
+  }
+}
