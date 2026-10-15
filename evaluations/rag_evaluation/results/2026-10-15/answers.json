@@ -1,0 +1,233 @@
+[
+  {
+    "id": "mcp-tool",
+    "mode": "cosine",
+    "prompt_sha256": "51409065d512840ca3bf66bcc638dd9cf908d2a4a88cfe3259e59d5296535602",
+    "text": "To expose a Python function as a FastMCP tool, decorate it with the `tool` decorator from `fastmcp.tools.function_tool`.  \n```python\nfrom fastmcp.tools.function_tool import tool\n\n@tool(server_file=\"my_server.py\", server_name=\"mcp\")   # optional args\ndef my_tool(ctx, params):\n    ...\n```\nThe decorator registers the function with the FastMCP server instance (or factory) specified by `server_file` and `server_name`; if omitted, FastMCP looks for common names such as `mcp`, `server`, or `app` in the module. The decorated function becomes a `FunctionTool` that the server can call over its protocol. [[f2d929fbd03a980ada768de92d8c59317514e23a7faf58061294dc7306c0045d]] [[a40ca74667cbd5bdc6df947ea6271ad7f7dca74d421ce6ac9e9422e5c3b7737e]]",
+    "status_messages": [],
+    "errors": [],
+    "elapsed_seconds": 2.177061
+  },
+  {
+    "id": "mcp-tool",
+    "mode": "rerank",
+    "prompt_sha256": "f317834482dbf87aeb20b90d34c6e2ab317d2ec68ff76871f9aa5c405c352f6c",
+    "text": "To register a Python function as a tool on a FastMCP server, create a `FastMCP` instance and decorate the function with `@mcp.tool`. FastMCP will use the function name as the tool name, parse its docstring for descriptions, generate a JSON‑Schema input schema from the type hints, and handle validation and execution automatically.  \n\nExample:\n\n```python\nfrom fastmcp import FastMCP\n\nmcp = FastMCP(\"My MCP Server\")\n\n@mcp.tool\ndef greet(name: str) -> str:\n    \"\"\"Return a friendly greeting.\"\"\"\n    return f\"Hello, {name}!\"\n```\n\nWhen the server runs, the `greet` function becomes an MCP tool that LLMs can invoke.  \n[010a327cd0077bb562332ed50eac03cdd226dc5e24af1cd01e86e662a59e8073] [a6514f06c54129a4e9e7af456bc3c53edfe2ef4b63a4b9aa8176ba5767d5e33e]",
+    "status_messages": [
+      "Groq pacing: about 58s remaining",
+      "Groq pacing: about 53s remaining",
+      "Groq pacing: about 48s remaining",
+      "Groq pacing: about 43s remaining",
+      "Groq pacing: about 38s remaining",
+      "Groq pacing: about 33s remaining",
+      "Groq pacing: about 28s remaining",
+      "Groq pacing: about 23s remaining",
+      "Groq pacing: about 18s remaining",
+      "Groq pacing: about 13s remaining",
+      "Groq pacing: about 8s remaining",
+      "Groq pacing: about 3s remaining"
+    ],
+    "errors": [],
+    "elapsed_seconds": 59.02778
+  },
+  {
+    "id": "mcp-stdio",
+    "mode": "rerank",
+    "prompt_sha256": "f9ab66b88d2321a14d24003ba1baeb137cfdc36414fa3080c052e062368cea9b",
+    "text": "To start a FastMCP server over the stdio transport, run the `fastmcp run` command with the server file and the object name, without specifying a transport. For example:\n\n```bash\nfastmcp run my_server.py:mcp\n```\n\nThis launches the server using the default stdio transport.  \n[258c4e2616f214435a3d8fd3a986d95306e001339e822592d25ccb357c03ae1c]",
+    "status_messages": [
+      "Groq pacing: about 59s remaining",
+      "Groq pacing: about 54s remaining",
+      "Groq pacing: about 49s remaining",
+      "Groq pacing: about 44s remaining",
+      "Groq pacing: about 39s remaining",
+      "Groq pacing: about 34s remaining",
+      "Groq pacing: about 29s remaining",
+      "Groq pacing: about 24s remaining",
+      "Groq pacing: about 19s remaining",
+      "Groq pacing: about 14s remaining",
+      "Groq pacing: about 9s remaining",
+      "Groq pacing: about 4s remaining"
+    ],
+    "errors": [],
+    "elapsed_seconds": 59.650494
+  },
+  {
+    "id": "mcp-stdio",
+    "mode": "cosine",
+    "prompt_sha256": "e19c8317864cadf6036a143f8f43854a1fe8a455fc45c9ae33248758adc6d32d",
+    "text": "To start a FastMCP server with the stdio transport, generate the shell command that an MCP host would use and run it. The stdio transport launches and manages the server process via subprocess pipes, so you can either:\n\n1. Use the CLI helper to produce the command:  \n   ```bash\n   fastmcp run --transport stdio <server_spec>\n   ```  \n   (the `run` command will output the exact stdio command)  \n2. Or manually run the generated command in a shell, which starts the server process and connects the client over stdio.  \n\nThis approach follows the stdio transport’s design of launching the server as a subprocess and handling its lifecycle automatically. [62cacb55a29cba006d7cb7b01784ef93f0fc799c865b20e4c4a590fe5440c2b1]",
+    "status_messages": [
+      "Groq pacing: about 60s remaining",
+      "Groq pacing: about 55s remaining",
+      "Groq pacing: about 50s remaining",
+      "Groq pacing: about 45s remaining",
+      "Groq pacing: about 40s remaining",
+      "Groq pacing: about 35s remaining",
+      "Groq pacing: about 30s remaining",
+      "Groq pacing: about 25s remaining",
+      "Groq pacing: about 20s remaining",
+      "Groq pacing: about 15s remaining",
+      "Groq pacing: about 10s remaining",
+      "Groq pacing: about 5s remaining"
+    ],
+    "errors": [],
+    "elapsed_seconds": 60.504273
+  },
+  {
+    "id": "python-break",
+    "mode": "cosine",
+    "prompt_sha256": "a35eac67f0b398b51509dfcbf2ab43b42da8c23320267a15bf42f5fe99f8522b",
+    "text": "In a Python loop, the `break` statement immediately terminates the loop, causing the program to exit the loop body and continue with the code that follows the loop, regardless of the loop’s condition. It stops further iterations as soon as it is executed. [[fdae9c03c349e246bbec57c193b1b704dd341523d728775bdb8059525de57fb8], [969ad101b7235f182a9d8f564058d1e9a8a3090c23d38d6076cdd5afc700a36d]]",
+    "status_messages": [
+      "Groq pacing: about 59s remaining",
+      "Groq pacing: about 54s remaining",
+      "Groq pacing: about 49s remaining",
+      "Groq pacing: about 44s remaining",
+      "Groq pacing: about 39s remaining",
+      "Groq pacing: about 34s remaining",
+      "Groq pacing: about 29s remaining",
+      "Groq pacing: about 24s remaining",
+      "Groq pacing: about 19s remaining",
+      "Groq pacing: about 14s remaining",
+      "Groq pacing: about 9s remaining",
+      "Groq pacing: about 4s remaining"
+    ],
+    "errors": [],
+    "elapsed_seconds": 59.750964
+  },
+  {
+    "id": "python-break",
+    "mode": "rerank",
+    "prompt_sha256": "36c986ee9853668b8aaf49ecc500e97c2089686c1e4cced7e7764423a972586d",
+    "text": "In a Python loop, the `break` statement immediately terminates the loop, causing the program to exit the loop body and continue with the code that follows the loop. It stops the loop even if the loop’s condition would otherwise still be true.【fdae9c03c349e246bbec57c193b1b704dd341523d728775bdb8059525de57fb8】【969ad101b7235f182a9d8f564058d1e9a8a3090c23d38d6076cdd5afc700a36d】",
+    "status_messages": [
+      "Groq pacing: about 59s remaining",
+      "Groq pacing: about 54s remaining",
+      "Groq pacing: about 49s remaining",
+      "Groq pacing: about 44s remaining",
+      "Groq pacing: about 39s remaining",
+      "Groq pacing: about 34s remaining",
+      "Groq pacing: about 29s remaining",
+      "Groq pacing: about 24s remaining",
+      "Groq pacing: about 19s remaining",
+      "Groq pacing: about 14s remaining",
+      "Groq pacing: about 9s remaining",
+      "Groq pacing: about 4s remaining"
+    ],
+    "errors": [],
+    "elapsed_seconds": 60.38133
+  },
+  {
+    "id": "python-continue",
+    "mode": "rerank",
+    "prompt_sha256": "24a3c2ac533573a8e6173458d1bef6338f4dccfb12e4f95668e0506cfe21fc4e",
+    "text": "In a Python loop, **`break`** terminates the entire loop and execution continues with the code that follows the loop, whereas **`continue`** ends only the current iteration and immediately starts the next iteration of the loop.  \n[969ad101b7235f182a9d8f564058d1e9a8a3090c23d38d6076cdd5afc700a36d]",
+    "status_messages": [
+      "Groq pacing: about 59s remaining",
+      "Groq pacing: about 54s remaining",
+      "Groq pacing: about 49s remaining",
+      "Groq pacing: about 44s remaining",
+      "Groq pacing: about 39s remaining",
+      "Groq pacing: about 34s remaining",
+      "Groq pacing: about 29s remaining",
+      "Groq pacing: about 24s remaining",
+      "Groq pacing: about 19s remaining",
+      "Groq pacing: about 14s remaining",
+      "Groq pacing: about 9s remaining",
+      "Groq pacing: about 4s remaining"
+    ],
+    "errors": [],
+    "elapsed_seconds": 59.34957
+  },
+  {
+    "id": "python-continue",
+    "mode": "cosine",
+    "prompt_sha256": "06c3b36842bc4bd86e45e4cc1a0771ca02587278754f32af17cd303cad668d48",
+    "text": "`continue` stops the rest of the current iteration and immediately starts the next loop cycle, while `break` exits the loop entirely and resumes execution after the loop.  \n[969ad101b7235f182a9d8f564058d1e9a8a3090c23d38d6076cdd5afc700a36d] [fdae9c03c349e246bbec57c193b1b704dd341523d728775bdb8059525de57fb8]",
+    "status_messages": [
+      "Groq pacing: about 60s remaining",
+      "Groq pacing: about 55s remaining",
+      "Groq pacing: about 50s remaining",
+      "Groq pacing: about 45s remaining",
+      "Groq pacing: about 40s remaining",
+      "Groq pacing: about 35s remaining",
+      "Groq pacing: about 30s remaining",
+      "Groq pacing: about 25s remaining",
+      "Groq pacing: about 20s remaining",
+      "Groq pacing: about 15s remaining",
+      "Groq pacing: about 10s remaining",
+      "Groq pacing: about 5s remaining"
+    ],
+    "errors": [],
+    "elapsed_seconds": 60.462241
+  },
+  {
+    "id": "js-bindings",
+    "mode": "cosine",
+    "prompt_sha256": "f6e3ebaf6e7b738a97ca561882b9ad0fd5c9954f345e32ce60992b63e27422c1",
+    "text": "Let and const are both block‑scoped, but const declares a value that cannot be reassigned, whereas let allows reassignment. In other words, a const variable must be initialized when declared and any later assignment throws an error, while a let variable can be updated later in the same block. Both are not hoisted like var and are used for variables that may or may not change, but only let permits changes.【7b4ed9c6e94a23cbc5e3ef1688407633f4560ee677410eb5d4abe68a79caffcc】【c901d3498f5745d8dcc3ee6c4207c4658a86281a0053edb4295524952c106f18】",
+    "status_messages": [
+      "Groq pacing: about 59s remaining",
+      "Groq pacing: about 54s remaining",
+      "Groq pacing: about 49s remaining",
+      "Groq pacing: about 44s remaining",
+      "Groq pacing: about 39s remaining",
+      "Groq pacing: about 34s remaining",
+      "Groq pacing: about 29s remaining",
+      "Groq pacing: about 24s remaining",
+      "Groq pacing: about 19s remaining",
+      "Groq pacing: about 14s remaining",
+      "Groq pacing: about 9s remaining",
+      "Groq pacing: about 4s remaining"
+    ],
+    "errors": [],
+    "elapsed_seconds": 59.64201
+  },
+  {
+    "id": "js-bindings",
+    "mode": "rerank",
+    "prompt_sha256": "149ae15ce5056e7d619ebe492062ea9a3b7269f265fd8896a4ec4621b73dedcb",
+    "text": "Let is a block‑scoped variable that can be reassigned, while const is also block‑scoped but must be initialized once and cannot be reassigned (attempting to do so throws an error).【c901d3498f5745d8dcc3ee6c4207c4658a86281a0053edb4295524952c106f18】【011e507995aff2155253c72bfc6a200dd101982322b313dd2f758405a6e3aec9】. Const variables are therefore immutable after declaration, whereas let variables remain mutable.",
+    "status_messages": [
+      "Groq pacing: about 60s remaining",
+      "Groq pacing: about 55s remaining",
+      "Groq pacing: about 50s remaining",
+      "Groq pacing: about 45s remaining",
+      "Groq pacing: about 40s remaining",
+      "Groq pacing: about 35s remaining",
+      "Groq pacing: about 30s remaining",
+      "Groq pacing: about 25s remaining",
+      "Groq pacing: about 20s remaining",
+      "Groq pacing: about 15s remaining",
+      "Groq pacing: about 10s remaining",
+      "Groq pacing: about 5s remaining"
+    ],
+    "errors": [],
+    "elapsed_seconds": 60.289129
+  },
+  {
+    "id": "js-equality",
+    "mode": "rerank",
+    "prompt_sha256": "f5aec0ccee9a0937b596119f7b0ba21e2c2cc52dca68158767ac5f39ae42f4dc",
+    "text": "",
+    "status_messages": [
+      "Groq pacing: about 59s remaining",
+      "Groq pacing: about 54s remaining",
+      "Groq pacing: about 49s remaining",
+      "Groq pacing: about 44s remaining",
+      "Groq pacing: about 39s remaining",
+      "Groq pacing: about 34s remaining",
+      "Groq pacing: about 29s remaining",
+      "Groq pacing: about 24s remaining",
+      "Groq pacing: about 19s remaining",
+      "Groq pacing: about 14s remaining",
+      "Groq pacing: about 9s remaining",
+      "Groq pacing: about 4s remaining"
+    ],
+    "errors": [
+      "provider_daily_limit"
+    ],
+    "elapsed_seconds": 59.216661
+  }
+]

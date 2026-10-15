@@ -11,6 +11,11 @@
       "url": "https://mcp.deepwiki.com/mcp",
       "timeoutSeconds": 60
     },
+    "checks": {
+      "command": "${pythonExecutable}",
+      "args": ["-m", "coding_assistant.execution.check_server", "--workspace", "${workspaceRoot}"],
+      "timeoutSeconds": 90
+    },
     "rag": {
       "command": "${pythonExecutable}",
       "args": [
