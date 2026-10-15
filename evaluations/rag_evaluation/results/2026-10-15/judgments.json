@@ -1,0 +1,463 @@
+{
+  "schema_version": 1,
+  "assessor": "Codex single-assessor manual review; not blinded, independently validated, or an LLM-as-judge automated score",
+  "rubric": {
+    "2": "Directly supports at least one reference fact in the requested programming language/API; need not alone form the entire answer.",
+    "1": "Related topic/background but incomplete direct evidence.",
+    "0": "Irrelevant or wrong language/API."
+  },
+  "answer_rubric": "Score each reference fact for semantic correctness (equivalent CLI startup accepted for mcp-stdio). Separately judge whether every substantive claim/code instruction is supported by the supplied passages in the requested scope. Correct claims can still be ungrounded. A valid citation ID does not establish entailment.",
+  "evidence_sha256": {
+    "queries.json": "e6696a6f21c92ba50a99b9bc68d7fbc785f2a124889f89e4361c4c25776a982b",
+    "retrieval.json": "a685798a22919719dd56688886b59058297f190bcd532174ee23c8d00ed12c91",
+    "answers.json": "d523b61ed8a246c4d4b65a035f10be9cc6ccc4c2254a8fa848cf63beb2ef427f"
+  },
+  "retrieval": {
+    "mcp-tool": {
+      "2803c81942859cc9506f47381997d0ceafffe52a52c834d8b64467b141ec01e3": {
+        "grade": 1,
+        "reason": "Direct server-instance/decorator example appears only in reranked context. General tool metadata and migration discussion are background; standalone decorator API heading alone is incomplete."
+      },
+      "f2d929fbd03a980ada768de92d8c59317514e23a7faf58061294dc7306c0045d": {
+        "grade": 1,
+        "reason": "Direct server-instance/decorator example appears only in reranked context. General tool metadata and migration discussion are background; standalone decorator API heading alone is incomplete."
+      },
+      "a40ca74667cbd5bdc6df947ea6271ad7f7dca74d421ce6ac9e9422e5c3b7737e": {
+        "grade": 1,
+        "reason": "Direct server-instance/decorator example appears only in reranked context. General tool metadata and migration discussion are background; standalone decorator API heading alone is incomplete."
+      },
+      "62cacb55a29cba006d7cb7b01784ef93f0fc799c865b20e4c4a590fe5440c2b1": {
+        "grade": 0,
+        "reason": "Direct server-instance/decorator example appears only in reranked context. General tool metadata and migration discussion are background; standalone decorator API heading alone is incomplete."
+      },
+      "65e0553cc8044781dc7b0c52612f186f0d7d65fd7903ee6e814fc3761f4d1e60": {
+        "grade": 1,
+        "reason": "Direct server-instance/decorator example appears only in reranked context. General tool metadata and migration discussion are background; standalone decorator API heading alone is incomplete."
+      },
+      "a6514f06c54129a4e9e7af456bc3c53edfe2ef4b63a4b9aa8176ba5767d5e33e": {
+        "grade": 1,
+        "reason": "Direct server-instance/decorator example appears only in reranked context. General tool metadata and migration discussion are background; standalone decorator API heading alone is incomplete."
+      },
+      "010a327cd0077bb562332ed50eac03cdd226dc5e24af1cd01e86e662a59e8073": {
+        "grade": 2,
+        "reason": "Direct server-instance/decorator example appears only in reranked context. General tool metadata and migration discussion are background; standalone decorator API heading alone is incomplete."
+      },
+      "08bd9782f464bd2a36ac45c5ef6a03f884720f7343da994dd021ff0965a73605": {
+        "grade": 2,
+        "reason": "Direct server-instance/decorator example appears only in reranked context. General tool metadata and migration discussion are background; standalone decorator API heading alone is incomplete."
+      },
+      "32ad38b7d44988c5b348f12b8f1b964951665be7cd209f51905b5b23910ba610": {
+        "grade": 1,
+        "reason": "Direct server-instance/decorator example appears only in reranked context. General tool metadata and migration discussion are background; standalone decorator API heading alone is incomplete."
+      },
+      "771aee01ddd80bd5f9dc78a768a746abf41bbd22af305b2efa6224cecddd7c8f": {
+        "grade": 1,
+        "reason": "Direct server-instance/decorator example appears only in reranked context. General tool metadata and migration discussion are background; standalone decorator API heading alone is incomplete."
+      }
+    },
+    "mcp-stdio": {
+      "774a5e044bb747a8f7e98a9a4e5815636f73f3d7385ec4a1437234840ccd304b": {
+        "grade": 1,
+        "reason": "CLI fastmcp run my_server.py:mcp explicitly starts with default stdio. Client transport docs, helper descriptions, and configuration types are background, not concrete startup instructions."
+      },
+      "5e36b8b6abe8273b0062123d6daea64db26c7ffc17b3ccfccfccebf2adfdbe24": {
+        "grade": 1,
+        "reason": "CLI fastmcp run my_server.py:mcp explicitly starts with default stdio. Client transport docs, helper descriptions, and configuration types are background, not concrete startup instructions."
+      },
+      "62cacb55a29cba006d7cb7b01784ef93f0fc799c865b20e4c4a590fe5440c2b1": {
+        "grade": 1,
+        "reason": "CLI fastmcp run my_server.py:mcp explicitly starts with default stdio. Client transport docs, helper descriptions, and configuration types are background, not concrete startup instructions."
+      },
+      "7ce3c7b38f4a6459bf4d7a0ccc0103c7d0aedb7a08dab20bae6f6434ac62edac": {
+        "grade": 0,
+        "reason": "CLI fastmcp run my_server.py:mcp explicitly starts with default stdio. Client transport docs, helper descriptions, and configuration types are background, not concrete startup instructions."
+      },
+      "dbddf2df578fcb1ab9a437410fdf2a0936fa7713ce47d4bc249c141782c5666d": {
+        "grade": 1,
+        "reason": "CLI fastmcp run my_server.py:mcp explicitly starts with default stdio. Client transport docs, helper descriptions, and configuration types are background, not concrete startup instructions."
+      },
+      "034a4bd88f2e5e85f9b61edc375935821261aa851e2d99cf573aafaafcdbcf03": {
+        "grade": 1,
+        "reason": "CLI fastmcp run my_server.py:mcp explicitly starts with default stdio. Client transport docs, helper descriptions, and configuration types are background, not concrete startup instructions."
+      },
+      "258c4e2616f214435a3d8fd3a986d95306e001339e822592d25ccb357c03ae1c": {
+        "grade": 2,
+        "reason": "CLI fastmcp run my_server.py:mcp explicitly starts with default stdio. Client transport docs, helper descriptions, and configuration types are background, not concrete startup instructions."
+      },
+      "de14ada050aa8d532f08f773833ab7b2a13d6721fac97daa0056f90cf5493ec9": {
+        "grade": 0,
+        "reason": "CLI fastmcp run my_server.py:mcp explicitly starts with default stdio. Client transport docs, helper descriptions, and configuration types are background, not concrete startup instructions."
+      }
+    },
+    "python-break": {
+      "b921f9e98185627fe65d803355af2396cf06871b6ae7eb6695f527cb80cb9cf6": {
+        "grade": 0,
+        "reason": "Python p28 explicitly exits the loop; p29 demonstrates the break. JavaScript evidence is wrong-language even when semantics overlap. Python loop introductions are background."
+      },
+      "fdae9c03c349e246bbec57c193b1b704dd341523d728775bdb8059525de57fb8": {
+        "grade": 2,
+        "reason": "Python p28 explicitly exits the loop; p29 demonstrates the break. JavaScript evidence is wrong-language even when semantics overlap. Python loop introductions are background."
+      },
+      "5563a1805c9b58c0a93d5e9e9f5a9cb67b83ddcba0e179f38c09a62872453135": {
+        "grade": 0,
+        "reason": "Python p28 explicitly exits the loop; p29 demonstrates the break. JavaScript evidence is wrong-language even when semantics overlap. Python loop introductions are background."
+      },
+      "969ad101b7235f182a9d8f564058d1e9a8a3090c23d38d6076cdd5afc700a36d": {
+        "grade": 2,
+        "reason": "Python p28 explicitly exits the loop; p29 demonstrates the break. JavaScript evidence is wrong-language even when semantics overlap. Python loop introductions are background."
+      },
+      "65b2b26e2de21282f0d72a43e5aaffba8895d6bc5908d15d5427324e9240e256": {
+        "grade": 1,
+        "reason": "Python p28 explicitly exits the loop; p29 demonstrates the break. JavaScript evidence is wrong-language even when semantics overlap. Python loop introductions are background."
+      },
+      "63b522cbc4320a3c7256ec284f787af3310d1ae5a984e47ef5618d490fb650c0": {
+        "grade": 0,
+        "reason": "Python p28 explicitly exits the loop; p29 demonstrates the break. JavaScript evidence is wrong-language even when semantics overlap. Python loop introductions are background."
+      },
+      "798dfccf6023e4370b712f9c9c06cf60f256d0944c984995cc2c41f7401cf06d": {
+        "grade": 0,
+        "reason": "Python p28 explicitly exits the loop; p29 demonstrates the break. JavaScript evidence is wrong-language even when semantics overlap. Python loop introductions are background."
+      }
+    },
+    "python-continue": {
+      "969ad101b7235f182a9d8f564058d1e9a8a3090c23d38d6076cdd5afc700a36d": {
+        "grade": 2,
+        "reason": "Python p29 directly explains continue and demonstrates break; p28 directly defines break. JavaScript passages receive zero despite similar semantics."
+      },
+      "b921f9e98185627fe65d803355af2396cf06871b6ae7eb6695f527cb80cb9cf6": {
+        "grade": 0,
+        "reason": "Python p29 directly explains continue and demonstrates break; p28 directly defines break. JavaScript passages receive zero despite similar semantics."
+      },
+      "fdae9c03c349e246bbec57c193b1b704dd341523d728775bdb8059525de57fb8": {
+        "grade": 2,
+        "reason": "Python p29 directly explains continue and demonstrates break; p28 directly defines break. JavaScript passages receive zero despite similar semantics."
+      },
+      "577427970d6e7244c2bdece17986d1c693bbd869d173143a7f2bd130110d6e5e": {
+        "grade": 0,
+        "reason": "Python p29 directly explains continue and demonstrates break; p28 directly defines break. JavaScript passages receive zero despite similar semantics."
+      },
+      "65b2b26e2de21282f0d72a43e5aaffba8895d6bc5908d15d5427324e9240e256": {
+        "grade": 1,
+        "reason": "Python p29 directly explains continue and demonstrates break; p28 directly defines break. JavaScript passages receive zero despite similar semantics."
+      },
+      "63b522cbc4320a3c7256ec284f787af3310d1ae5a984e47ef5618d490fb650c0": {
+        "grade": 0,
+        "reason": "Python p29 directly explains continue and demonstrates break; p28 directly defines break. JavaScript passages receive zero despite similar semantics."
+      },
+      "798dfccf6023e4370b712f9c9c06cf60f256d0944c984995cc2c41f7401cf06d": {
+        "grade": 0,
+        "reason": "Python p29 directly explains continue and demonstrates break; p28 directly defines break. JavaScript passages receive zero despite similar semantics."
+      },
+      "0e19485a6198fcdbf750ad9e565ca41f876fcc653fab829ec065cc8571a9a61e": {
+        "grade": 0,
+        "reason": "Python p29 directly explains continue and demonstrates break; p28 directly defines break. JavaScript passages receive zero despite similar semantics."
+      },
+      "5fc0785e9d26e27dd985ba61f7b22bc212e1ac0a5ff765463512872247b4fb69": {
+        "grade": 0,
+        "reason": "Python p29 directly explains continue and demonstrates break; p28 directly defines break. JavaScript passages receive zero despite similar semantics."
+      }
+    },
+    "js-bindings": {
+      "7b4ed9c6e94a23cbc5e3ef1688407633f4560ee677410eb5d4abe68a79caffcc": {
+        "grade": 2,
+        "reason": "Declaration/reassignment examples and const block scope directly support reference facts. let-versus-var or hoisting-only discussion is related background."
+      },
+      "c901d3498f5745d8dcc3ee6c4207c4658a86281a0053edb4295524952c106f18": {
+        "grade": 2,
+        "reason": "Declaration/reassignment examples and const block scope directly support reference facts. let-versus-var or hoisting-only discussion is related background."
+      },
+      "011e507995aff2155253c72bfc6a200dd101982322b313dd2f758405a6e3aec9": {
+        "grade": 2,
+        "reason": "Declaration/reassignment examples and const block scope directly support reference facts. let-versus-var or hoisting-only discussion is related background."
+      },
+      "8cdac9e805b677844ca8fc14461c2554c6ba2d8da58517a67b2882208677c773": {
+        "grade": 2,
+        "reason": "Declaration/reassignment examples and const block scope directly support reference facts. let-versus-var or hoisting-only discussion is related background."
+      },
+      "105451a0c53c3122c82bb3fc8b99c833128ede3ffb54d7fac65cf96a2d8fa1e9": {
+        "grade": 1,
+        "reason": "Declaration/reassignment examples and const block scope directly support reference facts. let-versus-var or hoisting-only discussion is related background."
+      },
+      "a3ee63604eac6d7271afe4f5a3b7cf1494d6a42eb62ce0c7778c831d55e28768": {
+        "grade": 1,
+        "reason": "Declaration/reassignment examples and const block scope directly support reference facts. let-versus-var or hoisting-only discussion is related background."
+      },
+      "084bba2b6e4fd9c8886335ae9c07065594f3934176fe08c981c57ff91aa1f9cc": {
+        "grade": 1,
+        "reason": "Declaration/reassignment examples and const block scope directly support reference facts. let-versus-var or hoisting-only discussion is related background."
+      }
+    },
+    "js-equality": {
+      "d01b76b89ae052307db3ddd39a8b881842c547b27bf5618ce689625faa1aff38": {
+        "grade": 1,
+        "reason": "The paired ==/=== explanation and the equal-value/type comparison directly answer the difference. Strict-equality-only continuation, inequality analogies, and examples alone are partial background."
+      },
+      "a085a30ddcc7cea204c630f83d62b0f805b7b47aa91be7d8b3ef9e303377ca3e": {
+        "grade": 2,
+        "reason": "The paired ==/=== explanation and the equal-value/type comparison directly answer the difference. Strict-equality-only continuation, inequality analogies, and examples alone are partial background."
+      },
+      "b6489438d2c7e807ed69453d95e85c5301f7173135203896c89ec01fefaaa277": {
+        "grade": 1,
+        "reason": "The paired ==/=== explanation and the equal-value/type comparison directly answer the difference. Strict-equality-only continuation, inequality analogies, and examples alone are partial background."
+      },
+      "76886e15c746bbdb5fe7d4a83f453860b285d24634fed2ad45a6d2aeb2dfc745": {
+        "grade": 1,
+        "reason": "The paired ==/=== explanation and the equal-value/type comparison directly answer the difference. Strict-equality-only continuation, inequality analogies, and examples alone are partial background."
+      },
+      "1e85b5803b17dcf296a3f4631ac783d52ea84b308684ffa6be83a4d089dca39a": {
+        "grade": 0,
+        "reason": "The paired ==/=== explanation and the equal-value/type comparison directly answer the difference. Strict-equality-only continuation, inequality analogies, and examples alone are partial background."
+      },
+      "865434f677592e7101aedb42d9a68c7b953ec94cabbee7872b9329bab4e3fc67": {
+        "grade": 0,
+        "reason": "The paired ==/=== explanation and the equal-value/type comparison directly answer the difference. Strict-equality-only continuation, inequality analogies, and examples alone are partial background."
+      },
+      "4d648db1b375b454d8e738b35c4ab5e3db756bc56ea1ca532591420cab08b5a6": {
+        "grade": 2,
+        "reason": "The paired ==/=== explanation and the equal-value/type comparison directly answer the difference. Strict-equality-only continuation, inequality analogies, and examples alone are partial background."
+      },
+      "a7183b76d1c601d3c46738119c1d4cb3453948273f4c92690afa2c6466000578": {
+        "grade": 1,
+        "reason": "The paired ==/=== explanation and the equal-value/type comparison directly answer the difference. Strict-equality-only continuation, inequality analogies, and examples alone are partial background."
+      }
+    },
+    "java-inheritance": {
+      "087d5782bfe2a8f09877ff2b05060659458ed8ffa48652923798e723d03fbcbe": {
+        "grade": 1,
+        "reason": "Literal class implements/interface and implements-clause passages directly support the interface keyword. Conceptual inheritance and abstract-class discussion without extends syntax are background."
+      },
+      "0eb6d045641537fd86d7a52c9a61ca5cfd19e83004f62bc1e7c81037380d7a09": {
+        "grade": 1,
+        "reason": "Literal class implements/interface and implements-clause passages directly support the interface keyword. Conceptual inheritance and abstract-class discussion without extends syntax are background."
+      },
+      "0c12c5cce20fc8cff8c59b4dbc7ace1699349850a4687b5d99ad346f95fec2f4": {
+        "grade": 1,
+        "reason": "Literal class implements/interface and implements-clause passages directly support the interface keyword. Conceptual inheritance and abstract-class discussion without extends syntax are background."
+      },
+      "b0e9f1354fad40e86633e9ad13b406a17900861f9f9761a1454e7143572f72ec": {
+        "grade": 1,
+        "reason": "Literal class implements/interface and implements-clause passages directly support the interface keyword. Conceptual inheritance and abstract-class discussion without extends syntax are background."
+      },
+      "5f98363f8c605eacf1d31db48cf34c36dad13863bc907e5bbfc26f58d688443c": {
+        "grade": 1,
+        "reason": "Literal class implements/interface and implements-clause passages directly support the interface keyword. Conceptual inheritance and abstract-class discussion without extends syntax are background."
+      },
+      "23151a49d04f4267dfe978da2ed8b978f8c676cb108481c6997927f9d861c330": {
+        "grade": 2,
+        "reason": "Literal class implements/interface and implements-clause passages directly support the interface keyword. Conceptual inheritance and abstract-class discussion without extends syntax are background."
+      },
+      "95a6ae28eb7e55f3c980656767ec8ac87b54f4086d3f48a2d9ac604040be4418": {
+        "grade": 2,
+        "reason": "Literal class implements/interface and implements-clause passages directly support the interface keyword. Conceptual inheritance and abstract-class discussion without extends syntax are background."
+      }
+    },
+    "java-finally": {
+      "9c5af43ce9b32e9289f86918d9bd304c8680de437fe8db49718cdbd1b908c16d": {
+        "grade": 0,
+        "reason": "Java p55 states resource closure even on exception or return, directly supporting cleanup. Suppressed exceptions or preference for try-with-resources are related but do not establish finally behavior. JavaScript is wrong-language."
+      },
+      "c77e123616ed0376b9bab3bd9843386201364a73b634c57935e1d8d4921f90c8": {
+        "grade": 1,
+        "reason": "Java p55 states resource closure even on exception or return, directly supporting cleanup. Suppressed exceptions or preference for try-with-resources are related but do not establish finally behavior. JavaScript is wrong-language."
+      },
+      "5209251ba5a95526882171cda6d9505d269b73ba2342d9875cd6b0e243724c38": {
+        "grade": 0,
+        "reason": "Java p55 states resource closure even on exception or return, directly supporting cleanup. Suppressed exceptions or preference for try-with-resources are related but do not establish finally behavior. JavaScript is wrong-language."
+      },
+      "1f5625b994f57a79c2c5e1c4879d1b2bad1ab9e25a2961442fe23cc2750e84f5": {
+        "grade": 0,
+        "reason": "Java p55 states resource closure even on exception or return, directly supporting cleanup. Suppressed exceptions or preference for try-with-resources are related but do not establish finally behavior. JavaScript is wrong-language."
+      },
+      "966f379c836b5a59b906959e88a079acfd3b3d616cece32a9250b81afc68c82c": {
+        "grade": 2,
+        "reason": "Java p55 states resource closure even on exception or return, directly supporting cleanup. Suppressed exceptions or preference for try-with-resources are related but do not establish finally behavior. JavaScript is wrong-language."
+      },
+      "eede555f1d9f08cc6b65b8e685ee8f1ec6f15672effd134e4bf51f6cde013f84": {
+        "grade": 0,
+        "reason": "Java p55 states resource closure even on exception or return, directly supporting cleanup. Suppressed exceptions or preference for try-with-resources are related but do not establish finally behavior. JavaScript is wrong-language."
+      },
+      "4ee28d2032846e4f16f9efcccd842047abb86a3c8e394b8408c3594c916bceee": {
+        "grade": 1,
+        "reason": "Java p55 states resource closure even on exception or return, directly supporting cleanup. Suppressed exceptions or preference for try-with-resources are related but do not establish finally behavior. JavaScript is wrong-language."
+      },
+      "f358aca5a2c13c72ea97455a0e27988557bb4487c4763d65417e8e5907f08fcb": {
+        "grade": 1,
+        "reason": "Java p55 states resource closure even on exception or return, directly supporting cleanup. Suppressed exceptions or preference for try-with-resources are related but do not establish finally behavior. JavaScript is wrong-language."
+      }
+    },
+    "python-write-text": {
+      "b68f3f105ada1c016ae01e6197366fde63791440137bf679006bee0997f12270": {
+        "grade": 0,
+        "reason": "None of these passages documents Path.write_text, the UTF-8 write call, or its returned character count. UTF-8/resource snippets do not answer this API question."
+      },
+      "a044f45e9b0955dd727be058f7fd075dc33fa03a87ccb24be4aa9dcfa01a0933": {
+        "grade": 0,
+        "reason": "None of these passages documents Path.write_text, the UTF-8 write call, or its returned character count. UTF-8/resource snippets do not answer this API question."
+      },
+      "cfd6bd799fd2da72863d1ee13de01fe78770d19d94d9a8fea6c0a8e0a8480639": {
+        "grade": 0,
+        "reason": "None of these passages documents Path.write_text, the UTF-8 write call, or its returned character count. UTF-8/resource snippets do not answer this API question."
+      },
+      "cdaf01cc6ca96a63a82c71038f2c4c86415e2ffc30a9f9b8688a70d79c6b85c2": {
+        "grade": 0,
+        "reason": "None of these passages documents Path.write_text, the UTF-8 write call, or its returned character count. UTF-8/resource snippets do not answer this API question."
+      },
+      "f994bc8842b5072f33a489785aa18ccf9a09b71456c5bbf91dcc786a815ab26c": {
+        "grade": 0,
+        "reason": "None of these passages documents Path.write_text, the UTF-8 write call, or its returned character count. UTF-8/resource snippets do not answer this API question."
+      },
+      "0cfc2c3104a6d1631ad477dc099c3d4912ab1571e2b5160330762ffa868290d1": {
+        "grade": 0,
+        "reason": "None of these passages documents Path.write_text, the UTF-8 write call, or its returned character count. UTF-8/resource snippets do not answer this API question."
+      },
+      "b2564b9d3e1f3c5b1e5b23512c0bda414ac4d18a2709dd4d167720872e7f4e2b": {
+        "grade": 0,
+        "reason": "None of these passages documents Path.write_text, the UTF-8 write call, or its returned character count. UTF-8/resource snippets do not answer this API question."
+      },
+      "747dcb6385f23aba29d345c0d852939d123c54f8f1f72e5bd53e51a85eceb725": {
+        "grade": 0,
+        "reason": "None of these passages documents Path.write_text, the UTF-8 write call, or its returned character count. UTF-8/resource snippets do not answer this API question."
+      }
+    },
+    "unsupported": {
+      "ad525647438bdd127457af5e758a5a5399e14dfa64256d65e706bb102e1d1a20": {
+        "grade": 0,
+        "reason": "All programming snippets are irrelevant to the requested historical menu. Returned nearest neighbors do not establish answerability."
+      },
+      "22097d4327b60057a50bbe1f40e9eb99e4bfedb2a2da8766b7d0ef278ebf29be": {
+        "grade": 0,
+        "reason": "All programming snippets are irrelevant to the requested historical menu. Returned nearest neighbors do not establish answerability."
+      },
+      "41fa77af9e050122f006138f1feab85d04f4821907f3a609881914ab6eccf8ad": {
+        "grade": 0,
+        "reason": "All programming snippets are irrelevant to the requested historical menu. Returned nearest neighbors do not establish answerability."
+      },
+      "4cb82487794644d64e38222824b4adb9d1a5379f01fdf87a667e44bbc84ebbce": {
+        "grade": 0,
+        "reason": "All programming snippets are irrelevant to the requested historical menu. Returned nearest neighbors do not establish answerability."
+      },
+      "167f7cec6d6353f74039321b29a3904b5f8125f9bb1fd47d1f6c0440a10d239b": {
+        "grade": 0,
+        "reason": "All programming snippets are irrelevant to the requested historical menu. Returned nearest neighbors do not establish answerability."
+      },
+      "69d9e7637ef265f8858b02240360b7626acb2d422d3b41075a093843fe086908": {
+        "grade": 0,
+        "reason": "All programming snippets are irrelevant to the requested historical menu. Returned nearest neighbors do not establish answerability."
+      },
+      "05cf731b84f6ab35ee1d9e55a54fc736f724e2d9cc11dbf4f54fa75ca11a6d49": {
+        "grade": 0,
+        "reason": "All programming snippets are irrelevant to the requested historical menu. Returned nearest neighbors do not establish answerability."
+      },
+      "e7adad832b1a2e5a38ee718d37b6cbe6952ad1fd31c390662cfc7d2376680e78": {
+        "grade": 0,
+        "reason": "All programming snippets are irrelevant to the requested historical menu. Returned nearest neighbors do not establish answerability."
+      },
+      "168b529448deef4e574bdbcc94d30318f0f224b6b4754c9f145bad3dba0beb4a": {
+        "grade": 0,
+        "reason": "All programming snippets are irrelevant to the requested historical menu. Returned nearest neighbors do not establish answerability."
+      }
+    }
+  },
+  "answers": {
+    "mcp-tool": {
+      "cosine": {
+        "facts_correct": [
+          false,
+          false
+        ],
+        "all_claims_supported": false,
+        "abstained": false,
+        "reason": "Invents @tool(server_file=..., server_name=...) and conflates module-discovery configuration with the decorator. Supplied snippets do not support the code."
+      },
+      "rerank": {
+        "facts_correct": [
+          true,
+          true
+        ],
+        "all_claims_supported": true,
+        "abstained": false,
+        "reason": "Correct FastMCP instance and @mcp.tool example, supported by the complete greeting example and metadata passage."
+      }
+    },
+    "mcp-stdio": {
+      "cosine": {
+        "facts_correct": [
+          true,
+          true
+        ],
+        "all_claims_supported": false,
+        "abstained": false,
+        "reason": "CLI startup is a semantically valid alternative, but the answer invents that fastmcp run outputs/generates the launch command. The cited helper description does not support that instruction."
+      },
+      "rerank": {
+        "facts_correct": [
+          true,
+          true
+        ],
+        "all_claims_supported": true,
+        "abstained": false,
+        "reason": "Exact fastmcp run my_server.py:mcp example and default-stdio explanation appear in the supplied passage."
+      }
+    },
+    "python-break": {
+      "cosine": {
+        "facts_correct": [
+          true,
+          true
+        ],
+        "all_claims_supported": true,
+        "abstained": false,
+        "reason": "Python p28 definition and p29 example support loop exit; continuing after the loop is the direct control-flow implication."
+      },
+      "rerank": {
+        "facts_correct": [
+          true,
+          true
+        ],
+        "all_claims_supported": true,
+        "abstained": false,
+        "reason": "Python p28/p29 support immediate loop exit; Unicode citation brackets contain valid supplied IDs."
+      }
+    },
+    "python-continue": {
+      "cosine": {
+        "facts_correct": [
+          true,
+          true
+        ],
+        "all_claims_supported": true,
+        "abstained": false,
+        "reason": "Python p28/p29 directly support break exit and continue skipping to the next iteration."
+      },
+      "rerank": {
+        "facts_correct": [
+          true,
+          true
+        ],
+        "all_claims_supported": true,
+        "abstained": false,
+        "reason": "Python p29 explains continue and demonstrates break; claims are supported without relying on wrong-language passages."
+      }
+    },
+    "js-bindings": {
+      "cosine": {
+        "facts_correct": [
+          true,
+          true
+        ],
+        "all_claims_supported": false,
+        "abstained": false,
+        "reason": "Both reference facts are correct, but claiming let/const are not hoisted is misleading, and the initialization rule is not established by cited snippets."
+      },
+      "rerank": {
+        "facts_correct": [
+          true,
+          true
+        ],
+        "all_claims_supported": false,
+        "abstained": false,
+        "reason": "Both reference facts are correct. Additional initialization and blanket const immutability assertions exceed supplied evidence; const does not make a referenced object immutable."
+      }
+    }
+  }
+}

@@ -5,7 +5,7 @@ and Node.js are required. The CLI itself does not need a GPU.
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e .
+.\.venv\Scripts\python.exe -m pip install -e ".[rag]"
 npm.cmd ci
 .\.venv\Scripts\coding-assistant.exe --help
 .\.venv\Scripts\coding-assistant.exe --connection-check --task "list tools"
@@ -17,7 +17,9 @@ requirements. If the environment is already activated, `coding-assistant` works 
 
 The CLI connects to all servers in `config/mcp.json`, discovers their tools, and
 prints each connected server and its tool count. The current config contains the
-filesystem and hosted DeepWiki servers, so normal CLI use requires internet access.
+filesystem, hosted DeepWiki, custom local RAG, and Python-check servers, so normal CLI use requires internet access.
+A fresh checkout also needs `python -m rag_server.prepare` followed by
+`python -m rag_server.index` before the first RAG query; see the root README.
 A server connection failure produces an error and a nonzero exit, not a successful
 connection banner.
 

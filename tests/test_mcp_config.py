@@ -59,8 +59,8 @@ def test_committed_servers_configure_filesystem_and_external_resource() -> None:
     config = load_mcp_config(project_root / "config" / "mcp.json")
 
     assert config.workspace_root == project_root
-    assert len(config.servers) == 3
-    filesystem, deepwiki, rag = config.servers
+    assert len(config.servers) == 4
+    filesystem, deepwiki, checks, rag = config.servers
     assert filesystem.name == "filesystem"
     assert filesystem.command == "node"
     assert filesystem.args == (
@@ -73,6 +73,10 @@ def test_committed_servers_configure_filesystem_and_external_resource() -> None:
     assert deepwiki.transport == "http"
     assert deepwiki.url == "https://mcp.deepwiki.com/mcp"
     assert deepwiki.timeout_seconds == 60
+    assert checks.name == "checks"
+    assert checks.command == sys.executable
+    assert checks.args == ("-m", "coding_assistant.execution.check_server", "--workspace", str(project_root))
+    assert checks.timeout_seconds == 90
     assert rag.name == "rag"
     assert rag.command == sys.executable
     assert rag.args == ("-m", "rag_server.server", "--store",

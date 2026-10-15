@@ -98,8 +98,9 @@ batch is parsed and checked before it is exposed to the agent. Python edit text
 normalizes CRLF and lone carriage returns to LF to avoid the filesystem server's
 fuzzy-match indentation fallback observed on Windows.
 
-Requests use temperature 0, up to 2,048 completion tokens, and low reasoning effort
-for GPT-OSS models. Tool descriptions and duplicated result envelopes are compacted.
+Requests use temperature 0 and up to 2,048 completion tokens. Tool-enabled GPT-OSS
+requests explicitly use low reasoning effort; text-only requests leave reasoning
+effort at the SDK/service default. Tool descriptions and duplicated result envelopes are compacted.
 The model-facing payload targets 18,000 UTF-8 bytes. This is an approximate size
 budget, not an exact token count. Older completed interactions can become explicit
 outcome summaries; oversized recent edits can also be summarized as completed

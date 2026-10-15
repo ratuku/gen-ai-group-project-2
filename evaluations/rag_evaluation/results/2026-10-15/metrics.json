@@ -1,0 +1,444 @@
+{
+  "per_query": [
+    {
+      "id": "mcp-tool",
+      "query": "How do I register a Python function as a tool on a FastMCP server?",
+      "cosine": {
+        "grades": [
+          1,
+          1,
+          1,
+          0,
+          1
+        ],
+        "precision_at_5": 0.0,
+        "reciprocal_rank_at_5": 0,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 0.0,
+        "elapsed_seconds": 0.026276,
+        "answer": {
+          "facts_correct": 0,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": false,
+          "review": "Invents @tool(server_file=..., server_name=...) and conflates module-discovery configuration with the decorator. Supplied snippets do not support the code."
+        }
+      },
+      "rerank": {
+        "grades": [
+          1,
+          2,
+          2,
+          1,
+          1
+        ],
+        "precision_at_5": 0.4,
+        "reciprocal_rank_at_5": 0.5,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.482464,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": true,
+          "review": "Correct FastMCP instance and @mcp.tool example, supported by the complete greeting example and metadata passage."
+        }
+      }
+    },
+    {
+      "id": "mcp-stdio",
+      "query": "How do I start a FastMCP server using the stdio transport?",
+      "cosine": {
+        "grades": [
+          1,
+          1,
+          1,
+          0,
+          1
+        ],
+        "precision_at_5": 0.0,
+        "reciprocal_rank_at_5": 0,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 0.0,
+        "elapsed_seconds": 0.02144,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": false,
+          "review": "CLI startup is a semantically valid alternative, but the answer invents that fastmcp run outputs/generates the launch command. The cited helper description does not support that instruction."
+        }
+      },
+      "rerank": {
+        "grades": [
+          1,
+          1,
+          2,
+          1,
+          0
+        ],
+        "precision_at_5": 0.2,
+        "reciprocal_rank_at_5": 0.3333333333333333,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.542934,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": true,
+          "review": "Exact fastmcp run my_server.py:mcp example and default-stdio explanation appear in the supplied passage."
+        }
+      }
+    },
+    {
+      "id": "python-break",
+      "query": "What does break do inside a Python loop?",
+      "cosine": {
+        "grades": [
+          0,
+          2,
+          0,
+          2,
+          1
+        ],
+        "precision_at_5": 0.4,
+        "reciprocal_rank_at_5": 0.5,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.02335,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": true,
+          "review": "Python p28 definition and p29 example support loop exit; continuing after the loop is the direct control-flow implication."
+        }
+      },
+      "rerank": {
+        "grades": [
+          2,
+          0,
+          0,
+          2,
+          0
+        ],
+        "precision_at_5": 0.4,
+        "reciprocal_rank_at_5": 1.0,
+        "direct_hit_at_1": 1.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.439402,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": true,
+          "review": "Python p28/p29 support immediate loop exit; Unicode citation brackets contain valid supplied IDs."
+        }
+      }
+    },
+    {
+      "id": "python-continue",
+      "query": "How is continue different from break in a Python loop?",
+      "cosine": {
+        "grades": [
+          2,
+          0,
+          2,
+          0,
+          1
+        ],
+        "precision_at_5": 0.4,
+        "reciprocal_rank_at_5": 1.0,
+        "direct_hit_at_1": 1.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.018367,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": true,
+          "review": "Python p28/p29 directly support break exit and continue skipping to the next iteration."
+        }
+      },
+      "rerank": {
+        "grades": [
+          2,
+          0,
+          0,
+          0,
+          0
+        ],
+        "precision_at_5": 0.2,
+        "reciprocal_rank_at_5": 1.0,
+        "direct_hit_at_1": 1.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.366908,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": true,
+          "review": "Python p29 explains continue and demonstrates break; claims are supported without relying on wrong-language passages."
+        }
+      }
+    },
+    {
+      "id": "js-bindings",
+      "query": "What is the difference between let and const in JavaScript?",
+      "cosine": {
+        "grades": [
+          2,
+          2,
+          2,
+          2,
+          1
+        ],
+        "precision_at_5": 0.8,
+        "reciprocal_rank_at_5": 1.0,
+        "direct_hit_at_1": 1.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.021402,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": false,
+          "review": "Both reference facts are correct, but claiming let/const are not hoisted is misleading, and the initialization rule is not established by cited snippets."
+        }
+      },
+      "rerank": {
+        "grades": [
+          2,
+          2,
+          2,
+          1,
+          1
+        ],
+        "precision_at_5": 0.6,
+        "reciprocal_rank_at_5": 1.0,
+        "direct_hit_at_1": 1.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.41973,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": false,
+          "review": "Both reference facts are correct. Additional initialization and blanket const immutability assertions exceed supplied evidence; const does not make a referenced object immutable."
+        }
+      }
+    },
+    {
+      "id": "js-equality",
+      "query": "How do == and === differ in JavaScript?",
+      "cosine": {
+        "grades": [
+          1,
+          2,
+          1,
+          1,
+          0
+        ],
+        "precision_at_5": 0.2,
+        "reciprocal_rank_at_5": 0.5,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.017318
+      },
+      "rerank": {
+        "grades": [
+          1,
+          0,
+          2,
+          2,
+          1
+        ],
+        "precision_at_5": 0.4,
+        "reciprocal_rank_at_5": 0.3333333333333333,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.411338
+      }
+    },
+    {
+      "id": "java-inheritance",
+      "query": "Which keywords let a Java class inherit a class and implement an interface?",
+      "cosine": {
+        "grades": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "precision_at_5": 0.0,
+        "reciprocal_rank_at_5": 0,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 0.0,
+        "elapsed_seconds": 0.020215
+      },
+      "rerank": {
+        "grades": [
+          2,
+          1,
+          1,
+          2,
+          1
+        ],
+        "precision_at_5": 0.4,
+        "reciprocal_rank_at_5": 1.0,
+        "direct_hit_at_1": 1.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.392617
+      }
+    },
+    {
+      "id": "java-finally",
+      "query": "What is the purpose of finally after try and catch in Java?",
+      "cosine": {
+        "grades": [
+          0,
+          1,
+          0,
+          0,
+          2
+        ],
+        "precision_at_5": 0.2,
+        "reciprocal_rank_at_5": 0.2,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.018424
+      },
+      "rerank": {
+        "grades": [
+          0,
+          1,
+          2,
+          1,
+          1
+        ],
+        "precision_at_5": 0.2,
+        "reciprocal_rank_at_5": 0.3333333333333333,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.406091
+      }
+    }
+  ],
+  "aggregate": {
+    "cosine": {
+      "answerable_queries": 8,
+      "precision_at_5": 0.25,
+      "reciprocal_rank_at_5": 0.4,
+      "direct_hit_at_1": 0.25,
+      "direct_hit_at_5": 0.625,
+      "median_retrieval_seconds": 0.0208085,
+      "generated_answers": 5,
+      "correct_reference_facts": 8,
+      "possible_reference_facts": 10,
+      "fully_grounded_answers": 2,
+      "answers_with_valid_citations": 5
+    },
+    "rerank": {
+      "answerable_queries": 8,
+      "precision_at_5": 0.35000000000000003,
+      "reciprocal_rank_at_5": 0.6875,
+      "direct_hit_at_1": 0.5,
+      "direct_hit_at_5": 1.0,
+      "median_retrieval_seconds": 0.429566,
+      "generated_answers": 5,
+      "correct_reference_facts": 10,
+      "possible_reference_facts": 10,
+      "fully_grounded_answers": 4,
+      "answers_with_valid_citations": 5
+    }
+  },
+  "controls": [
+    {
+      "id": "python-write-text",
+      "query": "How can pathlib.Path.write_text save a UTF-8 greeting and return the number of characters written?",
+      "cosine": {
+        "grades": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "precision_at_5": 0.0,
+        "reciprocal_rank_at_5": 0,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 0.0,
+        "elapsed_seconds": 0.025595
+      },
+      "rerank": {
+        "grades": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "precision_at_5": 0.0,
+        "reciprocal_rank_at_5": 0,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 0.0,
+        "elapsed_seconds": 0.469937
+      }
+    },
+    {
+      "id": "unsupported",
+      "query": "What was the exact lunch menu aboard Apollo 11 on July 20, 1969?",
+      "cosine": {
+        "grades": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "precision_at_5": 0.0,
+        "reciprocal_rank_at_5": 0,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 0.0,
+        "elapsed_seconds": 0.018209
+      },
+      "rerank": {
+        "grades": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "precision_at_5": 0.0,
+        "reciprocal_rank_at_5": 0,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 0.0,
+        "elapsed_seconds": 0.453608
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "files": {
+    "answers.json": "d523b61ed8a246c4d4b65a035f10be9cc6ccc4c2254a8fa848cf63beb2ef427f",
+    "collector_snapshot.py": "feb3092c2b92289fb23ec2839d84b26b48e4f1673fb3293239f114a0bb8365ee",
+    "judgments.json": "26114633d08a6ebd279bb49b521c569d8775bb5c94e958b955228cea56434d23",
+    "metadata.json": "35f5b28ac83acc99e9c4785242a6edbe1d4cd25fdcc9c4a0b02b785b7b50ff11",
+    "metrics.json": "09ce70a9b648b244cbbdaf4ca67b975b6e305a948436083a619c5946b30c7e98",
+    "queries.json": "e6696a6f21c92ba50a99b9bc68d7fbc785f2a124889f89e4361c4c25776a982b",
+    "RAG_COMPARISON_RESULTS.md": "bd0898af5c6b5bf596087aa6662b728ea777d38c2a6d39a083b3c5e00d7970d7",
+    "retrieval.json": "a685798a22919719dd56688886b59058297f190bcd532174ee23c8d00ed12c91",
+    "state.json": "24e6cb6830721d0fbedc50327c3accee1db483c5ae934c48f34054e8e791bd49"
+  },
+  "scorer_sha256": "8a34db24c301af3fd547e83e848a4bd3abae942c761e08387b07f78f5aa83d54"
+}

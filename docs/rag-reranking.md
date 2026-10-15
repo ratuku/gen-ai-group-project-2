@@ -10,6 +10,12 @@ This follows the [Sentence Transformers retrieve-and-rerank design](https://sber
 It reuses our existing Chroma index and embeddings; no re-ingestion is needed.
 It is not query expansion, a new vector database, or an answer-generating LLM.
 
+Reranking is included in the assignment's required
+[NirDiamant RAG_Techniques catalog](https://github.com/NirDiamant/RAG_Techniques#advanced-techniques),
+with a [reranking notebook](https://github.com/NirDiamant/RAG_Techniques/blob/main/all_rag_techniques/reranking.ipynb).
+Our implementation applies its retrieve-then-reorder pattern with a local
+cross-encoder, reusing Chroma rather than copying that notebook's storage setup.
+
 ## What changed
 
 | | Cosine baseline | Reranking |
@@ -103,6 +109,12 @@ not call a cloud LLM. For offline use after caching, set `HF_HUB_OFFLINE=1` and,
 if needed, `HF_HOME`; the command forwards those settings to its MCP subprocess.
 
 ## Observed comparison on the current corpus
+
+The larger [measured RAG evaluation](../evaluations/rag_evaluation/README.md) now
+retains ten fixed retrieval questions, five complete same-model answer pairs,
+explicit relevance/grounding judgments, and reproducible metrics. Its findings
+appear on page 3 of the submission PDF. The three-query observations below are
+earlier exploratory examples, not the final measured experiment.
 
 A local run through the production stdio server used 10,473 indexed chunks,
 `top_k=5`, and `candidate_k=20`. Both models were cached for the final run.

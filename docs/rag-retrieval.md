@@ -16,14 +16,15 @@ python -m pip install -e '.[rag]'
 python -m rag_server.prepare
 # Import existing embeddings without generating them again:
 python -m rag_server.index
-coding-assistant --connection-demo --task "list tools"
+coding-assistant --connection-check --task "list tools"
 ```
 
-The committed MCP configuration includes filesystem, DeepWiki, and the local RAG
-server. It starts RAG with `python -m rag_server.server`; that Python must belong
+The committed MCP configuration includes filesystem, DeepWiki, Python checks, and the local RAG
+server. It starts RAG with `${pythonExecutable} -m rag_server.server`, using the
+interpreter running the assistant; that Python must belong
 to the environment where the project and RAG extras are installed. The store
 path is resolved relative to the configuration file, independent of the agent's
-allowed filesystem workspace. The connection demo also contacts DeepWiki.
+allowed filesystem workspace. The connection check also contacts DeepWiki.
 
 With a configured Groq or Ollama provider, try asking the CLI:
 

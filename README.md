@@ -8,9 +8,15 @@ The assignment's PDF report is in the repository's top-level folder. It contains
 the system description and design decisions (page 1), two-model comparison
 (page 2), advanced RAG insights (page 3), reflection (page 4), original planning
 architecture (page 5), and updated architecture with explanations (page 6).
+State and sequence diagrams follow on pages 7-10, including three complete
+operations across inspection, bug repair, and a documentation-assisted feature.
 Supporting files under `evaluations/` are test records, not additional submission
 reports. See the [submission guide](output/pdf/README.md) for supporting evidence and current
 validation limits.
+
+**[Submission checklist](SUBMISSION_CHECKLIST.md)** |
+**[Architecture and workflow diagrams](docs/diagrams.md)** |
+**[Measured RAG comparison](evaluations/rag_evaluation/README.md)**
 
 For reproducible end-to-end tasks and a two-model Groq comparison, see
 [Model comparison](evaluations/model_comparison/README.md).
@@ -18,19 +24,62 @@ For reproducible end-to-end tasks and a two-model Groq comparison, see
 This project builds an autonomous command-line coding assistant with model-provider
 abstraction, dynamically discovered MCP tools, and a custom RAG MCP server.
 
-## Development setup
+## Setup from a fresh checkout
 
 Python 3.11 or newer is required. The Windows filesystem MCP integration also requires
 Node.js available on `PATH`. Install the pinned official filesystem server with
 `npm ci` before running the CLI or Windows regression tests.
 
+Install Python 3.11+ and Node.js, then open PowerShell:
+
 ```powershell
+git clone https://github.com/ratuku/gen-ai-group-project-2.git
+Set-Location .\gen-ai-group-project-2
 python -m venv .venv
-.venv\Scripts\Activate.ps1
-python -m pip install -r requirements-dev.txt -e ".[rag]"
-npm ci
-pytest
-mypy
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+npm.cmd ci
+.\.venv\Scripts\python.exe -m rag_server.prepare
+.\.venv\Scripts\python.exe -m rag_server.index
+.\.venv\Scripts\coding-assistant.exe --connection-check --task "list tools"
+```
+
+If you already have the project, open PowerShell in the folder containing this
+README and start at environment creation. Run commands from that folder: a relative
+`.venv` path will not work from your user home directory. No activation is required.
+`requirements-dev.txt` installs the project, RAG extras, and development tools;
+for runtime-only installation use `python -m pip install -r requirements.txt -e ".[rag]"`.
+
+The first RAG preparation downloads two local model dependencies as needed
+(the embedding model during preparation, the reranker on its first query).
+Preparation and indexing run once; repeat them only after changing the corpus or
+embedding settings. The resulting store is ignored by Git, so a fresh checkout
+must build it. Inference uses the CPU and requires no paid API. DeepWiki and
+initial model downloads require internet access.
+
+For an existing Windows `GROQ_API_KEY` environment variable, load it into this
+PowerShell session without printing it, then launch Juniper:
+
+```powershell
+if (-not $env:GROQ_API_KEY) {
+    $env:GROQ_API_KEY = [Environment]::GetEnvironmentVariable('GROQ_API_KEY', 'User')
+}
+if (-not $env:GROQ_API_KEY) {
+    $env:GROQ_API_KEY = [Environment]::GetEnvironmentVariable('GROQ_API_KEY', 'Machine')
+}
+.\.venv\Scripts\coding-assistant.exe --provider groq
+```
+
+Set the variable in Windows Environment Variables first if it is missing.
+For Ollama, start the local service, pull a tool-capable model, and set
+`OLLAMA_MODEL` as described below. Cloud limits are controlled by Groq; the
+project does not require a paid upgrade. [Free-tier testing notes](evaluations/model_comparison/FREE_TIER_TESTING_NOTES.md)
+explain pacing and resumable coding runs.
+
+Verify the implementation without cloud calls:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest
+.\.venv\Scripts\python.exe -m mypy
 ```
 
 ## Basic CLI
@@ -53,6 +102,25 @@ See [CLI usage and agent integration](docs/cli.md) and
 [Basic agent loop](docs/agent-loop.md) for execution behavior and options. See
 [Ollama provider](docs/ollama-provider.md) for local model setup and
 [Groq Cloud provider](docs/groq-provider.md) for cloud model setup and live usage.
+
+## Run Python scripts and tests
+
+The additional local `checks` MCP server exposes `checks.run_python_check`.
+Ask Juniper to run a trusted workspace script or pytest target after editing:
+
+```text
+Run tests/test_sample.py with checks.run_python_check in pytest mode, show the
+result, and fix the implementation if the tests fail.
+```
+
+Tool arguments are `path`, `mode` (`script` or `pytest`), and `timeout_seconds`
+(1-60). It uses the project interpreter without a shell, validates the target
+inside the workspace, omits credential-like environment variables, and returns
+the real exit status and up to 16,000 bytes of combined output. Confirmation
+mode asks before executing; auto mode permits validated calls automatically.
+Run trusted code: the subprocess has your account's permissions and is not an
+OS sandbox. The agent's automatic syntax check is separate and does not execute
+the edited code. Historical model-comparison scores predate this extra server.
 
 ## Ollama provider
 
@@ -118,10 +186,10 @@ repository, prints the answer, and exits with a nonzero status if discovery or t
 external request fails. Do not send secrets or private repository information to
 the external service.
 
-The provisional vertical-slice interfaces are exported from
-`coding_assistant.contracts`. The repository and runtime boundaries are documented in
-[docs/architecture.md](docs/architecture.md). Concrete implementations and stronger
-domain models will be extracted in later tickets after the end-to-end flow is validated.
+The shared streaming interfaces are exported from `coding_assistant.contracts`.
+The final repository and runtime boundaries are documented in
+[docs/architecture.md](docs/architecture.md), with
+[state and sequence diagrams](docs/diagrams.md).
 
 The concrete multi-server MCP client and its configuration format are documented in
 [docs/mcp-client.md](docs/mcp-client.md). Individual server configurations are added by

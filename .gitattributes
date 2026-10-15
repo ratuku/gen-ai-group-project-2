@@ -4,3 +4,4 @@
 # Preserve original evaluation evidence, including saved failing code and logs.
 # Their manifests describe exact bytes; do not normalize or tidy these fixtures.
 evaluations/model_comparison/results/** -text -whitespace
+evaluations/rag_evaluation/results/** -text -whitespace
