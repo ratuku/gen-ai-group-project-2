@@ -82,6 +82,29 @@ Verify the implementation without cloud calls:
 .\.venv\Scripts\python.exe -m mypy
 ```
 
+## macOS Python compatibility
+
+Use Python 3.12 for the demo environment. Python 3.15 currently has no compatible
+ONNX Runtime macOS wheel, which prevents Chroma installation. Pip may report this
+as a dependency conflict across several Chroma versions; upgrading Chroma alone
+will not resolve the missing wheel.
+
+With Python 3.12 installed, create a fresh environment from the repository root:
+
+```sh
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements-dev.txt
+npm ci
+```
+
+If `.venv` was created with another Python version, preserve or remove that old
+environment before creating the new one. Activating it does not change its Python
+version. `requirements.txt` installs the application and RAG dependencies declared
+in `pyproject.toml`; `requirements-dev.txt` includes it and adds pytest and mypy.
+For runtime-only use, install with `python -m pip install -r requirements.txt`.
+
 ## Basic CLI
 
 ```sh
