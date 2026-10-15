@@ -1,9 +1,9 @@
 # Groq Cloud provider
 
-The Groq adapter implements the existing `ModelProvider` contract without changing
-the agent loop, MCP client, or tool dispatcher. It streams text, assembles
-fragmented function calls, preserves tool-call IDs, and sends complete MCP results
-back to the cloud model on the next turn.
+The Groq adapter implements the `ModelProvider` contract. It streams text,
+assembles fragmented function calls, preserves tool-call IDs, and sends a bounded
+view of conversation and MCP results to the cloud model. Full results remain in
+agent history and CLI events.
 
 ## API key
 
@@ -59,10 +59,10 @@ coding-assistant `
 
 Omit `--task` for the interactive prompt.
 
-The standard `config/mcp.json` connects both the local filesystem server and the
-hosted DeepWiki server. It therefore needs internet access in addition to the Groq
-API connection. Use a separate MCP configuration containing only local servers when
-DeepWiki is not wanted.
+The standard `config/mcp.json` connects filesystem, hosted DeepWiki, and the local
+custom RAG server. It needs internet access and a prepared RAG index; see the RAG
+setup documentation. The RAG subprocess uses `${pythonExecutable}` so it runs in
+the same Python environment as the assistant.
 
 ## Data and tool-call flow
 
@@ -82,11 +82,69 @@ Groq streams tool-call IDs, names, and JSON arguments in fragments. The adapter
 assembles and validates a complete object before emitting the provider-neutral
 `tool_call` event expected by `BasicAgentLoop`.
 
+## Reliability and request limits
+
+The API sees flat, collision-safe aliases such as `filesystem__read_text_file`.
+The adapter maps them back to the exact discovered MCP tool. An unqualified name
+can resolve only when exactly one discovered tool has that basename. Unknown or
+ambiguous names trigger bounded regeneration before any tool in that response is
+executed. Optional null arguments are omitted only when the discovered schema
+forbids null; required and nullable fields still reach local validation.
+
+Groq's remote tool-presence validation is disabled so generation can be inspected
+and repaired locally. The dispatcher still validates the original tool name and
+schema, and confirmation/auto policy still gates execution. The entire returned
+batch is parsed and checked before it is exposed to the agent. Python edit text
+normalizes CRLF and lone carriage returns to LF to avoid the filesystem server's
+fuzzy-match indentation fallback observed on Windows.
+
+Requests use temperature 0, up to 2,048 completion tokens, and low reasoning effort
+for GPT-OSS models. Tool descriptions and duplicated result envelopes are compacted.
+The model-facing payload targets 18,000 UTF-8 bytes. This is an approximate size
+budget, not an exact token count. Older completed interactions can become explicit
+outcome summaries; oversized recent edits can also be summarized as completed
+actions. Call/result pairs are retained together, and the current task is kept.
+If required context cannot fit, the request fails clearly. The original history
+is not modified. Large source/result excerpts can require targeted rereads.
+
+Production requests now use a rolling per-model pacer with a default estimated
+7,000-token minute allowance and a 2.1-second minimum start interval. It reserves
+payload UTF-8 bytes / 3 rounded up, plus 2,048 maximum output tokens, and reduces
+the payload byte budget to fit that estimate. Reservations remain for 60 seconds,
+even on failed requests. Wait statuses update in steps of at most five seconds
+and support cancellation. This is a conservative heuristic, not exact tokenizer
+accounting; external usage and daily allowance are unknown, so 429 handling is
+still necessary. Evaluation batches share a pacer per model across tasks.
+
+Each model turn permits at most five API attempts. Short HTTP 429 waits follow
+`Retry-After` (or a numeric seconds hint), with each wait capped at 60 seconds.
+HTTP 413 reduces the model context budget before retrying. Recoverable generation
+errors, including errors inside HTTP 200 event streams, receive corrective
+feedback; transient connection/server failures use bounded backoff. Waits and
+repairs appear as CLI status events and remain cancellable. Once response text
+has been exposed, the stream is not replayed. Executed MCP operations are never
+automatically retried by this recovery mechanism.
+
+Daily limits and longer waits stop with an actionable message; completed edits
+remain on disk. The assistant cannot increase the account's allowance. Model
+output can still be semantically wrong, so run project tests and review edits.
+Daily-limit errors are not retried even when a short retry hint is present.
+Provider rate/daily/capacity error codes survive the agent loop so the evaluation
+runner can checkpoint and pause. See [free-tier run/resume instructions](../evaluations/model_comparison/README.md#free-tier-pacing-and-resume).
+
+See Groq's [tool API reference](https://console.groq.com/docs/api-reference),
+[local tool calling](https://console.groq.com/docs/tool-use/local-tool-calling),
+and [rate-limit guidance](https://console.groq.com/docs/rate-limits), and the
+[validation record](../evaluations/model_comparison/results/2026-10-15-fixes/REPORT.md).
+
 ## Troubleshooting
 
 - **Missing key:** set `GROQ_API_KEY` in the same terminal used to start the CLI.
 - **Authentication failure:** create an active key and replace the environment value.
-- **Rate limit:** wait for the service limit to reset, then retry.
+- **Rate limit:** short waits retry visibly; daily/long limits require waiting for
+  the account allowance to reset before running another task.
+- **Context too large:** use targeted reads or fewer MCP tools. The full local
+  conversation is retained even when the model-facing view is compacted.
 - **Model unavailable:** set `GROQ_MODEL` to a tool-capable model enabled for the
   account.
 - **Connection failure:** confirm internet access and Groq service availability.

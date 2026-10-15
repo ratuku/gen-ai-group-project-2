@@ -1,0 +1,50 @@
+{
+  "started_utc": "2026-10-15T14:48:04.421825+00:00",
+  "git_revision": "6e4735d6b1b81ac2233d00d9e775ccaf5736d83b",
+  "python": "3.13.15",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "working_tree_status": [
+    " M .gitignore",
+    " M README.md",
+    " M config/mcp.json",
+    " M evaluations/model_comparison/README.md",
+    " M pyproject.toml",
+    " M src/coding_assistant/agent/loop.py",
+    " M src/coding_assistant/config/mcp.py",
+    " M src/coding_assistant/providers/groq.py",
+    " M tests/test_groq_provider.py",
+    " M tests/test_mcp_config.py",
+    "?? evaluations/__init__.py",
+    "?? evaluations/model_comparison/VALIDATION.md",
+    "?? evaluations/model_comparison/__init__.py",
+    "?? evaluations/model_comparison/results/",
+    "?? evaluations/model_comparison/run.py",
+    "?? evaluations/model_comparison/tasks.py",
+    "?? src/coding_assistant/providers/groq_context.py",
+    "?? tests/test_groq_recovery.py",
+    "?? tests/test_model_comparison.py",
+    "?? tmp/"
+  ],
+  "models": [
+    "openai/gpt-oss-20b",
+    "openai/gpt-oss-120b"
+  ],
+  "provider": "groq",
+  "repeats": 1,
+  "scope": "all-configured-servers",
+  "config_path": "${PROJECT_ROOT}\\config\\mcp.json",
+  "config_sha256": "3ab5b8b68bacfc5b7b4012ee455446faf946a2c15d020ce4ccead147e823be8f",
+  "max_iterations": 8,
+  "timeout_seconds": 180.0,
+  "sampling": "Groq temperature=0; GPT-OSS reasoning=low; max_completion_tokens=2048",
+  "request_context_budget_bytes": 14000,
+  "provider_max_attempts": 3,
+  "execution_mode": "auto",
+  "tasks": [
+    "bugfix",
+    "feature",
+    "refactor",
+    "documentation"
+  ],
+  "task_definition_sha256": "d60d622c6283d336e6ad4ea42733c64030dd080a95af297b28964b7dec691b6b"
+}

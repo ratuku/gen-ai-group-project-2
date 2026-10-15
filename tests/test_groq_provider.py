@@ -235,6 +235,8 @@ async def test_stream_translates_history_tools_text_and_fragmented_parallel_call
     assert request["stream"] is True
     native_messages = request["messages"]
     assert isinstance(native_messages, Sequence)
+    assert native_messages[0]["role"] == "system"
+    native_messages = native_messages[1:]
     assert native_messages[1] == {
         "role": "assistant",
         "content": "I will read it.",
@@ -243,7 +245,7 @@ async def test_stream_translates_history_tools_text_and_fragmented_parallel_call
                 "id": "previous_call",
                 "type": "function",
                 "function": {
-                    "name": "filesystem.read_text_file",
+                    "name": "filesystem__read_text_file",
                     "arguments": '{"path": "README.md"}',
                 },
             }
@@ -257,8 +259,8 @@ async def test_stream_translates_history_tools_text_and_fragmented_parallel_call
         {
             "type": "function",
             "function": {
-                "name": "filesystem.read_text_file",
-                "description": "Read a UTF-8 text file",
+                "name": "filesystem__read_text_file",
+                "description": "MCP filesystem.read_text_file: Read a UTF-8 text file",
                 "parameters": tools[0]["input_schema"],
             },
         },
@@ -408,6 +410,8 @@ async def test_official_sdk_serializes_history_and_streamed_tool_fragments() -> 
     assert payload["stream"] is True
     native_messages = payload["messages"]
     assert isinstance(native_messages, Sequence)
+    assert native_messages[0]["role"] == "system"
+    native_messages = native_messages[1:]
     assert isinstance(native_messages[1], Mapping)
     assert native_messages[1]["tool_calls"][0]["id"] == "call_from_agent"
     assert isinstance(native_messages[2], Mapping)
@@ -440,7 +444,7 @@ async def test_malformed_native_responses_become_readable_errors(
     chunks: Sequence[object], message: str
 ) -> None:
     factory = RecordingFactory((chunks,))
-    provider = GroqProvider("model", api_key="key", client_factory=factory)
+    provider = GroqProvider("model", api_key="key", client_factory=factory, max_attempts=1)
 
     events = await collect(provider, ({"role": "user", "content": "Hello"},), ())
 
@@ -495,7 +499,7 @@ def status_error(status_code: int) -> APIStatusError:
 @pytest.mark.asyncio
 async def test_service_errors_are_actionable(error: Exception, expected: str) -> None:
     factory = RecordingFactory((error,))
-    provider = GroqProvider("missing-model", api_key="key", client_factory=factory)
+    provider = GroqProvider("missing-model", api_key="key", client_factory=factory, max_attempts=1)
 
     events = await collect(provider, ({"role": "user", "content": "Hello"},), ())
 
@@ -598,7 +602,7 @@ async def test_agent_loop_executes_groq_tool_call_and_returns_final_answer() -> 
         message["role"]
         for message in second_messages
         if isinstance(message, Mapping)
-    ] == ["user", "assistant", "tool"]
+    ] == ["system", "user", "assistant", "tool"]
     assert isinstance(second_messages[-1], Mapping)
     assert second_messages[-1]["tool_call_id"] == "call_readme"
     tool_result = json.loads(str(second_messages[-1]["content"]))

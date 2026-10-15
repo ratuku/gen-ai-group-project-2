@@ -74,9 +74,11 @@ Servers use the conventional `mcpServers` JSON object:
 ```
 
 The loader validates that each server defines exactly one transport and expands
-`${workspaceRoot}` and `${configDir}` without exposing unrelated process environment
+`${workspaceRoot}`, `${configDir}`, and `${pythonExecutable}` without exposing unrelated process environment
 variables. `${configDir}` is the directory containing the JSON configuration, so
 the installed server can be located independently of the allowed workspace.
+`${pythonExecutable}` resolves to the interpreter running the assistant and is
+used by the custom RAG command to preserve its installed dependency environment.
 Launching the JavaScript entry point directly avoids `cmd.exe` and `npx.cmd`
 parsing of workspace characters such as `&`, `%`, and `^`.
 

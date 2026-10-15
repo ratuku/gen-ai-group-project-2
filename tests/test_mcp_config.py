@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -73,7 +74,7 @@ def test_committed_servers_configure_filesystem_and_external_resource() -> None:
     assert deepwiki.url == "https://mcp.deepwiki.com/mcp"
     assert deepwiki.timeout_seconds == 60
     assert rag.name == "rag"
-    assert rag.command == "python"
+    assert rag.command == sys.executable
     assert rag.args == ("-m", "rag_server.server", "--store",
                         f"{project_root / 'config'}/../rag_server/artifacts/chroma")
     assert rag.timeout_seconds == 120

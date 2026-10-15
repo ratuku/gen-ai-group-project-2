@@ -5,15 +5,19 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import math
+import re
 from collections.abc import AsyncIterator, Awaitable, Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Protocol, cast
 
-from groq import APIConnectionError, APIStatusError, APITimeoutError, AsyncGroq
+from groq import APIConnectionError, APIError, APIStatusError, APITimeoutError, AsyncGroq
 from groq.types.chat import ChatCompletionMessageParam, ChatCompletionToolParam
 
 from coding_assistant.agent import BasicAgentLoop
 from coding_assistant.contracts import MCPClient, Payload
+from coding_assistant.providers.groq_context import ToolNames, request_view, tool_view
+from coding_assistant.providers.groq_pacing import RequestPacer
 
 
 DEFAULT_MODEL = "openai/gpt-oss-20b"
@@ -45,7 +49,8 @@ class _SDKGroqClient:
     """Small typed boundary around the official nested SDK resources."""
 
     def __init__(self, api_key: str) -> None:
-        self._client = AsyncGroq(api_key=api_key)
+        # Own retries here so waits are bounded and visible to the CLI.
+        self._client = AsyncGroq(api_key=api_key, max_retries=0, timeout=45)
 
     async def chat(
         self,
@@ -64,12 +69,19 @@ class _SDKGroqClient:
                 messages=native_messages,
                 tools=cast(Iterable[ChatCompletionToolParam], tools),
                 stream=True,
+                disable_tool_validation=True,
+                parallel_tool_calls=False,
+                max_completion_tokens=2048,
+                temperature=0,
+                **({"reasoning_effort": "low"} if model.startswith("openai/gpt-oss-") else {}),
             )
         else:
             response = await self._client.chat.completions.create(
                 model=model,
                 messages=native_messages,
                 stream=True,
+                max_completion_tokens=2048,
+                temperature=0,
             )
         return cast(AsyncIterator[object], response)
 
@@ -86,6 +98,9 @@ class GroqProvider:
         *,
         api_key: str,
         client_factory: ClientFactory | None = None,
+        max_attempts: int = 5,
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        pacer: RequestPacer | None = None,
     ) -> None:
         if not isinstance(model, str) or not model.strip():
             raise ValueError("Groq model must be a non-empty string")
@@ -94,6 +109,11 @@ class GroqProvider:
         self.model = model.strip()
         self._api_key = api_key.strip()
         self._client_factory = client_factory or _SDKGroqClient
+        if isinstance(max_attempts, bool) or not isinstance(max_attempts, int) or not 1 <= max_attempts <= 5:
+            raise ValueError("max_attempts must be between 1 and 5")
+        self.max_attempts = max_attempts
+        self._sleep = sleep
+        self._pacer = pacer if pacer is not None else (RequestPacer() if client_factory is None else None)
 
     async def stream(
         self,
@@ -104,37 +124,107 @@ class GroqProvider:
         try:
             native_messages = _convert_messages(messages)
             native_tools = _convert_tools(tools)
+            names = ToolNames(tools)
+            native_tools = tool_view(native_tools, names)
             client = self._client_factory(self._api_key)
-            response = await client.chat(
-                model=self.model,
-                messages=native_messages,
-                tools=native_tools,
-                stream=True,
-            )
-            pending: dict[int, _PendingToolCall] = {}
-            async for chunk in response:
-                for event in _consume_chunk(chunk, pending):
-                    yield event
-            for index in sorted(pending):
-                yield pending[index].finish()
-            yield {"type": "completed"}
+            budget = 18000
+            if self._pacer is not None:
+                budget = min(budget, (self._pacer.tokens_per_minute - 2048) * 3)
+            feedback = ""
+            for attempt in range(self.max_attempts):
+                emitted = False
+                try:
+                    view = request_view(native_messages, native_tools, names, budget=budget, feedback=feedback)
+                    if self._pacer is not None:
+                        # A heuristic, not the model tokenizer. Include schemas and
+                        # reserve maximum output, including GPT-OSS reasoning.
+                        size = len(json.dumps({"messages": view, "tools": native_tools}, ensure_ascii=False,
+                                              separators=(",", ":")).encode("utf-8"))
+                        estimate = math.ceil(size / 3) + 2048
+                        async for status in self._pacer.reserve(estimate):
+                            yield status
+                    response = await client.chat(model=self.model, messages=view, tools=native_tools, stream=True)
+                    pending: dict[int, _PendingToolCall] = {}
+                    async for chunk in response:
+                        for event in _consume_chunk(chunk, pending):
+                            emitted = True
+                            yield event
+                    # Validate the entire batch before exposing any executable call.
+                    calls = [names.resolve(pending[index].finish()) for index in sorted(pending)]
+                    invalid = [str(call["name"]) for call in calls if call["name"] not in names.original]
+                    if invalid:
+                        raise GroqProviderError(
+                            f"Unknown or ambiguous tool names {invalid!r}; generate exact supplied aliases"
+                        )
+                    if not calls and not emitted:
+                        raise GroqProviderError("Model returned no usable text or tool calls")
+                    for call in calls:
+                        yield call
+                    yield {"type": "completed"}
+                    return
+                except (APIError, GroqProviderError) as error:
+                    if emitted or attempt + 1 == self.max_attempts:
+                        raise
+                    delay = 0.0
+                    if isinstance(error, (APIConnectionError, APITimeoutError)):
+                        delay = float(2 ** attempt)
+                        reason = f"Temporary Groq connection failure; waiting {delay:g}s"
+                    elif isinstance(error, APIStatusError):
+                        if error.status_code == 429:
+                            if _daily_limit(error):
+                                raise
+                            wait = _retry_delay(error)
+                            if wait is None:
+                                raise
+                            delay = wait
+                            reason = f"Groq rate limit; waiting {delay:g}s"
+                        elif error.status_code == 413:
+                            budget = max(min(7000, budget), int(budget * 0.7))
+                            reason = "Groq request too large; reducing model context"
+                        elif error.status_code == 400 and any(
+                            marker in _error_detail(error).lower()
+                            for marker in ("tool", "parsing", "parse", "generation")
+                        ):
+                            feedback = "The previous response was rejected before any tools ran. Return valid JSON arguments and use only exact supplied tool names. " + _error_detail(error)[:350]
+                            reason = "Repairing rejected tool generation"
+                        elif error.status_code in {408, 409} or error.status_code >= 500:
+                            delay = float(2 ** attempt)
+                            reason = f"Temporary Groq status {error.status_code}; waiting {delay:g}s"
+                        else:
+                            raise
+                    elif isinstance(error, APIError):
+                        if not any(marker in _error_detail(error).lower() for marker in ("tool", "parse", "parsing", "generation")):
+                            raise
+                        feedback = "The previous stream was rejected before any tools ran. Return valid JSON arguments and exact supplied tool names. " + _error_detail(error)[:350]
+                        reason = "Repairing rejected tool stream"
+                    else:
+                        feedback = "The previous response was unusable; no tools ran. " + str(error) + ". Return a valid tool call or a final answer."
+                        reason = "Repairing empty or malformed model response"
+                    yield {"type": "status", "content": f"{reason} (retry {attempt + 1}/{self.max_attempts - 1})",
+                           "wait_seconds": delay}
+                    if delay:
+                        await self._sleep(delay)
         except asyncio.CancelledError:
             raise
         except APITimeoutError as error:
             yield {
                 "type": "error",
+                "error_code": "provider_unavailable",
                 "content": f"Groq request timed out. Try again. Details: {_error_detail(error)}",
             }
         except APIConnectionError as error:
             yield {
                 "type": "error",
+                "error_code": "provider_unavailable",
                 "content": (
                     "Could not connect to Groq Cloud. Check the internet connection "
                     f"and try again. Details: {_error_detail(error)}"
                 ),
             }
         except APIStatusError as error:
-            yield {"type": "error", "content": _status_error_message(error, self.model)}
+            code = ("provider_daily_limit" if _daily_limit(error) else "provider_rate_limit") if error.status_code == 429 else (
+                "provider_unavailable" if error.status_code >= 500 or error.status_code in {408, 409} else "provider_request_error")
+            yield {"type": "error", "content": _status_error_message(error, self.model), "error_code": code}
         except GroqProviderError as error:
             yield {"type": "error", "content": f"Invalid Groq response: {error}"}
         except Exception as error:
@@ -409,12 +499,36 @@ def _status_error_message(error: APIStatusError, model: str) -> str:
             f"models enabled for the account. Details: {detail}"
         )
     if error.status_code == 429:
+        if _daily_limit(error):
+            return (
+                "Groq daily allowance reached. Completed tool edits are retained. "
+                f"Retry after the allowance resets. Details: {detail}"
+            )
         return (
             "Groq rate limit reached. Wait for the limit to reset and "
             f"try again. Details: {detail}"
         )
+    if error.status_code == 413:
+        return "Groq request remains too large after context reduction. Use targeted reads or fewer MCP tools. Full agent history is retained."
     return f"Groq request failed with status {error.status_code}: {detail}"
 
 
 def _error_detail(error: BaseException) -> str:
     return str(error) or type(error).__name__
+
+
+def _daily_limit(error: APIStatusError) -> bool:
+    return error.status_code == 429 and any(marker in _error_detail(error).lower()
+                                           for marker in ("tokens per day", "requests per day", "(tpd)", "(rpd)"))
+
+
+def _retry_delay(error: APIStatusError) -> float | None:
+    value = error.response.headers.get("retry-after", "")
+    if not value:
+        match = re.search(r"try again in ([0-9.]+)s", _error_detail(error), re.IGNORECASE)
+        value = match.group(1) if match else ""
+    try:
+        delay = float(value)
+    except ValueError:
+        return None
+    return max(0.1, delay) if math.isfinite(delay) and 0 <= delay <= 60 else None

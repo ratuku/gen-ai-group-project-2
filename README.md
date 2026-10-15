@@ -1,5 +1,19 @@
 # Juniper - CLI Coding Assistant
 
+## Submission report
+
+**[Open PROJECT_REPORT.pdf](PROJECT_REPORT.pdf)**
+
+The assignment's PDF report is in the repository's top-level folder. It contains
+the system description and design decisions (page 1), two-model comparison
+(page 2), advanced RAG insights (page 3), reflection (page 4), original planning
+architecture (page 5), and updated architecture with explanations (page 6).
+See the [report guide](output/pdf/README.md) for supporting evidence and current
+validation limits.
+
+For reproducible end-to-end tasks and a two-model Groq comparison, see
+[Model comparison](evaluations/model_comparison/README.md).
+
 This project builds an autonomous command-line coding assistant with model-provider
 abstraction, dynamically discovered MCP tools, and a custom RAG MCP server.
 

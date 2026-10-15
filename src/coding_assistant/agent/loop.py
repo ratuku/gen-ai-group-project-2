@@ -9,6 +9,7 @@ from uuid import uuid4
 
 from coding_assistant.contracts import MCPClient, ModelProvider, Payload
 from coding_assistant.execution import ToolDispatcher
+from coding_assistant.agent.validation import python_edit_path, syntax_check
 
 
 class BasicAgentLoop:
@@ -44,6 +45,7 @@ class BasicAgentLoop:
         self._running = True
         self._messages.append({"role": "user", "content": task.strip()})
         pending: list[Payload] = []
+        syntax_failures: dict[str, str] = {}
         try:
             tools = await self.dispatcher.discover()
             for iteration in range(1, self.max_iterations + 1):
@@ -67,8 +69,14 @@ class BasicAgentLoop:
                         ids.add(call_id)
                         calls.append(call)
                     elif kind == "error":
-                        raise RuntimeError(str(event.get("content", event.get("message", "Model failed"))))
-                    elif kind not in {"completed", "status"}:
+                        message = f"Agent stopped: {event.get('content', event.get('message', 'Model failed'))}"
+                        self._messages.append({"role": "assistant", "content": message})
+                        yield {**event, "type": "error", "content": message}
+                        yield {"type": "completed", "reason": "error", "iterations": iteration}
+                        return
+                    elif kind == "status":
+                        yield {**event, "type": "status", "content": str(event.get("content", ""))}
+                    elif kind != "completed":
                         raise ValueError(f"Unsupported model event: {kind!r}")
 
                 text = "".join(text_parts)
@@ -76,11 +84,17 @@ class BasicAgentLoop:
                     if not text.strip():
                         raise ValueError("Model returned neither a final response nor tool calls")
                     self._messages.append({"role": "assistant", "content": text})
+                    if syntax_failures:
+                        yield {"type": "error", "error_code": "code_validation_failed",
+                               "content": f"Saved Python syntax is invalid or unverified: {syntax_failures}"}
+                        yield {"type": "completed", "reason": "validation_failed", "iterations": iteration}
+                        return
                     yield {"type": "completed", "reason": "answered", "iterations": iteration}
                     return
 
                 self._messages.append({"role": "assistant", "content": text, "tool_calls": calls})
                 pending = list(calls)
+                edited_paths: set[str] = set()
                 for call in calls:
                     name = str(call["name"])
                     arguments = call["arguments"]
@@ -95,6 +109,33 @@ class BasicAgentLoop:
                     })
                     pending.pop(0)
                     yield {**result, "type": "tool_result", "name": name, "tool_call_id": call["id"]}
+                    path = python_edit_path(name, arguments)
+                    if path is not None and not result.get("is_error"):
+                        edited_paths.add(path)
+
+                # These reads use the same schema validation and confirmation
+                # policy as model-requested tools. No generated code is executed.
+                for path in sorted(edited_paths):
+                    check_call: Payload = {"id": f"validation_{uuid4().hex}", "name": "filesystem.read_text_file",
+                                           "arguments": {"path": path}}
+                    self._messages.append({"role": "assistant", "content": "Verify saved Python syntax.",
+                                           "tool_calls": [check_call]})
+                    pending = [check_call]
+                    yield {"type": "status", "content": f"Checking saved Python syntax: {path}"}
+                    yield {**check_call, "type": "tool_call", "origin": "validation"}
+                    read_result = await self.dispatcher.execute("filesystem.read_text_file", {"path": path})
+                    validation = syntax_check(path, read_result)
+                    result_with_check = {**read_result, "validation": validation}
+                    self._messages.append({"role": "tool", "name": "filesystem.read_text_file",
+                                           "tool_call_id": check_call["id"], "content": result_with_check})
+                    pending.clear()
+                    yield {**result_with_check, "type": "tool_result", "name": "filesystem.read_text_file",
+                           "tool_call_id": check_call["id"], "origin": "validation"}
+                    yield {"type": "status", "content": f"Python syntax: {validation['detail']}"}
+                    if validation["passed"]:
+                        syntax_failures.pop(path, None)
+                    else:
+                        syntax_failures[path] = str(validation["detail"])
 
             message = f"Stopped after {self.max_iterations} model iterations without a final response."
             self._messages.append({"role": "assistant", "content": message})

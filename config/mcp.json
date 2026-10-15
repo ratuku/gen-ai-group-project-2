@@ -12,7 +12,7 @@
       "timeoutSeconds": 60
     },
     "rag": {
-      "command": "python",
+      "command": "${pythonExecutable}",
       "args": [
         "-m",
         "rag_server.server",
