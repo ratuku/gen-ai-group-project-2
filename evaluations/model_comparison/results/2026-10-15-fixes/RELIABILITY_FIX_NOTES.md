@@ -1,7 +1,9 @@
-# Reliability fixes and validation
+# Reliability fix notes and diagnostic results
+
+Supporting test record. The single submission report is [PROJECT_REPORT.pdf](../../../../PROJECT_REPORT.pdf).
 
 Subsequent changes add [free-tier pacing, resumable batches, and saved-code syntax
-validation](../../FREE_TIER_VALIDATION.md). The evidence below describes the earlier
+validation](../../FREE_TIER_TESTING_NOTES.md). The evidence below describes the earlier
 implementation and pilots; their scores and source hashes remain unchanged.
 
 The reported infrastructure failures now have implemented recovery paths and
@@ -90,7 +92,7 @@ After export, all 16 saved sources reproduced their recorded check results and
 matched their hashes. Pilot 2 metadata records the exact production source hashes
 used for that batch. [Final policy hashes](final-policy.json) identify subsequent
 changes that have unit/integration coverage but have not completed a live batch.
-The [original 24-run baseline](../2026-10-15/REPORT.md) remains available.
+The [original 24-run baseline](../2026-10-15/BASELINE_MODEL_RESULTS.md) remains available.
 
 Once the account allowance permits, rerun all four tasks with both models on the
 final code, using a fresh output directory. Review generated code and source

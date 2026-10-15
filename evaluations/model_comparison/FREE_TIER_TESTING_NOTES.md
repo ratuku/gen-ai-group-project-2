@@ -1,4 +1,6 @@
-# Free-tier reliability changes
+# Free-tier testing notes
+
+Supporting test record. The single submission report is [PROJECT_REPORT.pdf](../../PROJECT_REPORT.pdf).
 
 The application now paces requests, checkpoints evaluation batches, and checks
 saved Python syntax. None of these changes raises Groq's account limits or
@@ -38,7 +40,7 @@ That is **2/3 attempted slots, 2/8 planned slots**, with one provider block.
 This partial batch does not establish a complete new success rate or a general
 model ranking. The original 3/8 and 2/8 pilots remain separate evidence.
 
-Sanitized [live evidence](results/2026-10-15-free-tier/REPORT.md) includes results,
+Sanitized [live evidence](results/2026-10-15-free-tier/PARTIAL_RETEST_RESULTS.md) includes results,
 metadata, state, saved code, dependencies, and source hashes. Raw checkpoints are
 in the ignored `local/free-tier-validation-live` directory. After quota is
 available, continue from the project directory with:

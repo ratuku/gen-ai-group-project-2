@@ -1,4 +1,6 @@
-# Model comparison results
+# Pilot 2 run details - 8 attempts
+
+Supporting test record. The single submission report is [PROJECT_REPORT.pdf](../../../../../PROJECT_REPORT.pdf).
 
 Machine checks and tool traces; review explanations and retrieval grounding manually.
 

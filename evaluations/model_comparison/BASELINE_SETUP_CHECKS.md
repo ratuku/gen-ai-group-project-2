@@ -1,4 +1,6 @@
-# Evaluation readiness - October 15, 2026
+# Baseline setup checks - October 15, 2026
+
+Supporting test record. The single submission report is [PROJECT_REPORT.pdf](../../PROJECT_REPORT.pdf).
 
 Base revision: `6e4735d6b1b81ac2233d00d9e775ccaf5736d83b` (main).
 The evaluation harness is an uncommitted addition on
@@ -47,7 +49,7 @@ Ran four fixed tasks three times with each of `openai/gpt-oss-20b` and
 end and 3/12 code checks. The report distinguishes tool/model-output failures from
 observed account limits and passing edits interrupted before completion.
 
-The [reviewed report](results/2026-10-15/REPORT.md) includes outcomes, observed
+The [reviewed baseline results](results/2026-10-15/BASELINE_MODEL_RESULTS.md) include outcomes, observed
 differences, failure investigation, source-grounding review, and limitations.
 All 24 retained source files reproduce their original check results and match
 their source hashes. Sanitized traces, runtime metadata, diagnostics, the actual

@@ -142,8 +142,8 @@ def write_report(output: Path, runs: list[dict[str, object]], planned: int | Non
     latest = latest_runs(runs)
     passed = sum(bool(run["passed"]) for run in latest)
     lines = [
-        "# Model comparison results", "",
-        "Machine checks and tool traces; review explanations and retrieval grounding manually.", "",
+        "# Coding task test results", "",
+        "Supporting test record; PROJECT_REPORT.pdf at the repository root is the submission report. Review explanations and grounding manually.", "",
         f"Overall completion: **{passed}/{len(latest)} attempted task/model slots**"
         + (f"; **{passed}/{planned} planned slots**." if planned is not None else "."), "",
         f"All-attempt completion: **{sum(bool(run['passed']) for run in runs)}/{len(runs)}**. "
@@ -186,7 +186,7 @@ def write_report(output: Path, runs: list[dict[str, object]], planned: int | Non
         "Filesystem-only runs omit external and custom-RAG integration; see metadata.json for scope.",
         "",
     ]
-    (output / "REPORT.md").write_text("\n".join(lines), encoding="utf-8")
+    (output / "TEST_RESULTS.md").write_text("\n".join(lines), encoding="utf-8")
 
 
 async def evaluate(args: argparse.Namespace) -> int:

@@ -185,7 +185,7 @@ async def test_pause_resume_preserves_attempts_and_skips_completed_slots(tmp_pat
     assert len(runs) == 7 and len(latest_runs(runs)) == 6
     assert len({run["workspace"] for run in runs}) == 7
     assert "checkpoint-test-key" not in (args.output / "results.json").read_text()
-    report = (args.output / "REPORT.md").read_text()
+    report = (args.output / "TEST_RESULTS.md").read_text()
     assert "5/6 planned slots" in report and "provider_blocked" in report
     assert "5/7" in report
     # Completed resume makes no more model/task calls.

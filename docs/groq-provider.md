@@ -135,7 +135,7 @@ runner can checkpoint and pause. See [free-tier run/resume instructions](../eval
 See Groq's [tool API reference](https://console.groq.com/docs/api-reference),
 [local tool calling](https://console.groq.com/docs/tool-use/local-tool-calling),
 and [rate-limit guidance](https://console.groq.com/docs/rate-limits), and the
-[validation record](../evaluations/model_comparison/results/2026-10-15-fixes/REPORT.md).
+[validation record](../evaluations/model_comparison/results/2026-10-15-fixes/RELIABILITY_FIX_NOTES.md).
 
 ## Troubleshooting
 

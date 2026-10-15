@@ -1,4 +1,4 @@
-# Submission report
+# Submission guide
 
 **[Open PROJECT_REPORT.pdf](../../PROJECT_REPORT.pdf)**
 
@@ -7,6 +7,10 @@ when opening the project folder or GitHub repository. This folder contains its
 supporting guide; the root PDF is the submission copy.
 
 This is the consolidated report for the assignment's PDF deliverable.
+
+**Submit only `PROJECT_REPORT.pdf` as the written report.** Markdown files under
+`evaluations/` are supporting test records. Their names identify their purpose:
+baseline results, diagnostic pilot details, fix notes, or a partial retest.
 
 | Required content | PDF location |
 |---|---|

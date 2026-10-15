@@ -214,7 +214,7 @@ def build():
         ["24-run baseline and saved code", "evaluations/model_comparison/results/2026-10-15/"],
         ["Fixes, 16 diagnostic runs, final-policy hashes", "evaluations/model_comparison/results/2026-10-15-fixes/"],
         ["RAG method and recorded observations", "docs/rag-reranking.md"],
-        ["Free-tier controls and syntax validation", "evaluations/model_comparison/FREE_TIER_VALIDATION.md"],
+        ["Free-tier controls and syntax validation", "evaluations/model_comparison/FREE_TIER_TESTING_NOTES.md"],
         ["Original planning architecture (p. 5)", "init-architecture.drawio2.pdf"],
         ["Current structure and configuration (p. 6)", "docs/architecture.md; config/mcp.json; src/coding_assistant/; rag_server/"],
     ], [188, 328]))

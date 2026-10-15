@@ -1,7 +1,9 @@
-# Ticket #14: two-model end-to-end evaluation
+# Baseline model test results
+
+Supporting test record. The single submission report is [PROJECT_REPORT.pdf](../../../../PROJECT_REPORT.pdf).
 
 This is the baseline before reliability fixes. See the
-[subsequent implementation and validation](../2026-10-15-fixes/REPORT.md) for current changes.
+[subsequent implementation and validation](../2026-10-15-fixes/RELIABILITY_FIX_NOTES.md) for current changes.
 
 On October 15, 2026, the assistant attempted the same four coding tasks three
 times with each Groq model, for 24 scored runs. **GPT-OSS 20B passed 4/12 runs
@@ -188,5 +190,5 @@ that command for a different checkout. The configuration snapshot uses
 before direct reuse. Account identifiers are redacted and adjacent text chunks
 are coalesced in the published traces. Raw local evidence remains in the ignored
 evaluation directory. [Summary metrics](summary.json) and the
-[generated per-run table](generated-report.md) accompany the full traces and
+[generated per-run table](BASELINE_RUN_DETAILS.md) accompany the full traces and
 final source files.

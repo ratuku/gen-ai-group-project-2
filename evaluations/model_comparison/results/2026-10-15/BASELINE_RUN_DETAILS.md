@@ -1,4 +1,6 @@
-# Model comparison results
+# Baseline run details - 24 attempts
+
+Supporting test record. The single submission report is [PROJECT_REPORT.pdf](../../../../PROJECT_REPORT.pdf).
 
 Machine checks and tool traces; review explanations and retrieval grounding manually.
 

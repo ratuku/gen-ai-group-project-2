@@ -1,9 +1,26 @@
 # Model comparison (ticket #14)
 
-The [October 15, 2026 report](results/2026-10-15/REPORT.md) contains 24 live runs,
+These are supporting test records. The single written submission report is
+[PROJECT_REPORT.pdf](../../PROJECT_REPORT.pdf) at the repository root.
+
+The [baseline model results](results/2026-10-15/BASELINE_MODEL_RESULTS.md) contain 24 live runs,
 observed model differences, failure investigation, and retained evidence.
-The [reliability-fix validation](results/2026-10-15-fixes/REPORT.md) records subsequent
+The [reliability fix notes](results/2026-10-15-fixes/RELIABILITY_FIX_NOTES.md) record subsequent
 code changes, diagnostic live runs, and the daily quota that limited further testing.
+
+| Supporting record | Purpose |
+|---|---|
+| [BASELINE_MODEL_RESULTS.md](results/2026-10-15/BASELINE_MODEL_RESULTS.md) | Reviewed original two-model results and failure analysis |
+| [BASELINE_RUN_DETAILS.md](results/2026-10-15/BASELINE_RUN_DETAILS.md) | Original machine-generated per-attempt details |
+| [RELIABILITY_FIX_NOTES.md](results/2026-10-15-fixes/RELIABILITY_FIX_NOTES.md) | Fixes, diagnostics, and remaining limitations |
+| [PILOT_1_RUN_DETAILS.md](results/2026-10-15-fixes/pilot-1/PILOT_1_RUN_DETAILS.md) | First intermediate diagnostic batch |
+| [PILOT_2_RUN_DETAILS.md](results/2026-10-15-fixes/pilot-2/PILOT_2_RUN_DETAILS.md) | Second intermediate diagnostic batch |
+| [PARTIAL_RETEST_RESULTS.md](results/2026-10-15-free-tier/PARTIAL_RETEST_RESULTS.md) | Latest published quota-paused batch |
+| [BASELINE_SETUP_CHECKS.md](BASELINE_SETUP_CHECKS.md) | Historical setup and smoke-check record |
+| [FREE_TIER_TESTING_NOTES.md](FREE_TIER_TESTING_NOTES.md) | Pacing, resume, syntax validation, and current test notes |
+
+New local runs write `TEST_RESULTS.md`. Historical metadata keeps the filenames
+that existed when each run was captured; those snapshots are not navigation links.
 
 Run the same fixed tasks through two **real Groq models**, using the production
 `GroqProvider`, `BasicAgentLoop`, schema-validating dispatcher, execution policy
@@ -73,7 +90,7 @@ completion, and feedback allows a later model turn to repair it. This does not
 execute generated code or reveal hidden behavioral checks. Behavioral grading
 remains independent after each task; valid syntax does not establish correctness.
 
-See [free-tier validation](FREE_TIER_VALIDATION.md) for implementation coverage
+See [free-tier validation](FREE_TIER_TESTING_NOTES.md) for implementation coverage
 and the remaining live-validation limitation.
 
 From the repository root, activate the project's virtual environment:
@@ -157,7 +174,7 @@ The output directory contains:
   events, tool arguments/results, errors, completion reason, correctness checks,
   elapsed seconds, timestamped events, and ordered tool calls for every attempted run.
 - `workspaces/`: final source files, separated by model, task, and repeat.
-- `REPORT.md`: generated outcome table, failure evidence, and interpretation limits.
+- `TEST_RESULTS.md`: generated outcome table, failure evidence, and interpretation limits.
 
 Results are saved after each task so interrupted batches retain completed evidence.
 Elapsed time includes server discovery and tool work, but excludes grading; it is
