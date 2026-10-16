@@ -1,7 +1,2 @@
-groq>=1.7,<2
-jsonschema>=4.20,<5
-mcp>=2.3,<3
-ollama>=0.6.3,<0.7
-openai>=2,<3
-prompt-toolkit>=3.0.48,<4
-rich>=13.7,<15
+# Runtime dependencies are declared in pyproject.toml, including RAG.
+-e .[rag]

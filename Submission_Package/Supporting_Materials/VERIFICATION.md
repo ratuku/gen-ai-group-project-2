@@ -20,10 +20,11 @@
 
 ## Remaining publication step
 
-The latest local changes are uncommitted and the GitHub default-branch README
-still describes the older ten-page report. The twelve-page report, OpenAI provider,
-evaluation harness updates, and new results need publishing to the submitted repo.
-This packaging operation did not commit, push, merge, or submit anything.
+The latest changes are committed on codex/submission-openai-followup for a
+pull request into main. The twelve-page report, OpenAI provider, evaluation
+updates and results reach the default branch when that PR is merged. The latest
+main-branch dependency-installation fix is incorporated into the PR branch.
+The video/course submission remains a user action.
 Local changes from other chats were preserved. No grade guarantee is implied by
 passing tests; code documentation and rubric judgment remain qualitative.
 

@@ -7,8 +7,8 @@ JUNIPER - GROUP PROJECT 2 SUBMISSION
 4. Architecture_and_Workflow_Diagrams.pdf is an optional separate diagram copy
    (6 pages, extracted from report pages 5-10). Upload if a separate file helps.
 
-BEFORE SUBMITTING: publish the latest local source/report/evaluation changes
-to the GitHub repo. Its default branch currently has the older version.
+BEFORE SUBMITTING: merge the codex/submission-openai-followup pull request
+into main. Until then, the default branch has the older report and code.
 
 Supporting_Materials contains planning documents, editable diagram source,
 setup files, the readiness check and a source backup. You do not need to
