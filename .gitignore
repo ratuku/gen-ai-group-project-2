@@ -9,3 +9,4 @@ node_modules/
 rag_server/artifacts/
 evaluations/model_comparison/local/
 tmp/
+.env

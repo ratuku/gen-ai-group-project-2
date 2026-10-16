@@ -23,7 +23,7 @@ coding-assistant = "coding_assistant.cli.app:main"
 
 [project.optional-dependencies]
 rag = [
-    "chromadb>=1.0,<2",
+    "chromadb>=1.5.9,<2",
     "numpy>=1.26,<2.4",
     "pypdf>=6,<7",
     "fonttools>=4.50,<5",
