@@ -13,7 +13,7 @@ conversation history and repeatedly asks a `ModelProvider` what to do next:
    the next model turn.
 7. Finish with the model's nonempty final response, or report the iteration limit.
 
-The default limit is eight model requests per user task. Multiple tool calls in a
+The default limit is 40 model requests per user task. Multiple tool calls in a
 single response finish sequentially before the next model request. The limit counts
 model turns, not tool calls. A tool call on the last allowed turn is executed and
 recorded, but no additional model request is made to summarize its result. The UI
@@ -30,7 +30,7 @@ from coding_assistant.agent import BasicAgentLoop
 
 def create_agent(client):
     provider = ...  # Any implementation of the ModelProvider protocol.
-    return BasicAgentLoop(provider, client, max_iterations=8)
+    return BasicAgentLoop(provider, client, max_iterations=40)
 ```
 
 The project includes Ollama and Groq Cloud implementations. Select them with

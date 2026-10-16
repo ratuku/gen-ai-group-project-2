@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "started_utc": "2026-10-16T02:32:26.366842+00:00",
+  "provider": "openai",
+  "model": "gpt-4.1-mini-2025-04-14",
+  "source": "evaluations/rag_evaluation/results/2026-10-15",
+  "source_metadata_sha256": "35f5b28ac83acc99e9c4785242a6edbe1d4cd25fdcc9c4a0b02b785b7b50ff11",
+  "retrieval_sha256": "a685798a22919719dd56688886b59058297f190bcd532174ee23c8d00ed12c91",
+  "queries_sha256": "e6696a6f21c92ba50a99b9bc68d7fbc785f2a124889f89e4361c4c25776a982b",
+  "openai_sdk": "2.54.0",
+  "generation": {
+    "temperature": "SDK default",
+    "max_completion_tokens": 4096,
+    "max_attempts": 3,
+    "store": false,
+    "reasoning_effort": "not sent for GPT-4.1"
+  },
+  "method": "All 20 answers generated anew using frozen paired contexts and original evidence-only prompt; alternating mode order. Original Groq answers are not reused. Retrieval/timings are historical, not remeasured.",
+  "source_sha256": {
+    "evaluations/rag_evaluation/openai_answers.py": "8f8dc81bb018498d10185ccc1b2f5d6635fc03f9e38e949e59266dc2ce0d05a0",
+    "evaluations/rag_evaluation/run.py": "38da7871a1723719106dee2be6fcdff1a1b727d38a55fd02ce19b82b3f7454c0",
+    "src/coding_assistant/providers/openai.py": "355aac88418e3381dba01220dd7e0b3b7963cffd55e1665091ffc1432352b95e",
+    "src/coding_assistant/providers/groq.py": "2affccc51e895dca3ad934f4f161ef0df32ab8b3b34d9e2ef458d4ae1338a55f",
+    "src/coding_assistant/providers/groq_context.py": "7ccfe92eda1824c90383e9b451d49579a2eeb9f1bdbbdb92d1726f63657ce46e"
+  }
+}

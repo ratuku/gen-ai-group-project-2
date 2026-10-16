@@ -26,11 +26,11 @@ repository does not contain or load a committed key file.
 
 ## Model configuration
 
-The default is `openai/gpt-oss-20b`, a tool-capable model. Override it when another
+The default is `openai/gpt-oss-120b`, a tool-capable model. Override it when another
 enabled model is preferred:
 
 ```powershell
-$env:GROQ_MODEL = "openai/gpt-oss-20b"
+$env:GROQ_MODEL = "openai/gpt-oss-120b"
 ```
 
 Model availability is controlled by Groq and may change independently of this
@@ -90,6 +90,9 @@ can resolve only when exactly one discovered tool has that basename. Unknown or
 ambiguous names trigger bounded regeneration before any tool in that response is
 executed. Optional null arguments are omitted only when the discovered schema
 forbids null; required and nullable fields still reach local validation.
+The schema sent to Groq accepts null for those optional arguments so remote
+argument validation does not reject them before cleanup. The original MCP
+schema remains unchanged; required arguments and nested values stay strict.
 
 Groq's remote tool-presence validation is disabled so generation can be inspected
 and repaired locally. The dispatcher still validates the original tool name and
@@ -107,21 +110,37 @@ outcome summaries; oversized recent edits can also be summarized as completed
 actions. Call/result pairs are retained together, and the current task is kept.
 If required context cannot fit, the request fails clearly. The original history
 is not modified. Large source/result excerpts can require targeted rereads.
+Behavioral check summaries preserve pass/exit status and the end of tracebacks,
+so repeated command paths do not crowd out the actual assertion failure. The
+model-facing view retains the latest check state and flags repeated reads,
+even when older interactions are abbreviated. Failed checks prompt a corrective
+edit; edits mark older check results as needing verification again.
+If the latest behavioral check passed, no subsequent edit occurred, and file
+reads repeat, the next response is restricted to a final summary with no tools.
+Unexpected tool calls in that response are rejected rather than executed. This
+ends post-check read loops while preserving the task's iteration limit; failed
+checks and new user tasks retain their tools.
+The summary request renders past operations and results as plain transcript data
+and ends with an explicit request for final text, avoiding native tool-history
+markers that can make GPT-OSS generate more calls even without offered tools.
 
-Production requests now use a rolling per-model pacer with a default estimated
-7,000-token minute allowance and a 2.1-second minimum start interval. It reserves
-payload UTF-8 bytes / 3 rounded up, plus 2,048 maximum output tokens, and reduces
-the payload byte budget to fit that estimate. Reservations remain for 60 seconds,
-even on failed requests. Wait statuses update in steps of at most five seconds
-and support cancellation. This is a conservative heuristic, not exact tokenizer
-accounting; external usage and daily allowance are unknown, so 429 handling is
-still necessary. Evaluation batches share a pacer per model across tasks.
+Requests are sent immediately, without a local token-per-minute pacing delay.
+The provider waits only when recovering from an actual API error, as described
+below. Groq's account limits still apply.
 
-Each model turn permits at most five API attempts. Short HTTP 429 waits follow
-`Retry-After` (or a numeric seconds hint), with each wait capped at 60 seconds.
+Each model turn permits at most five attempts for format and service recovery.
+HTTP 429 responses have a separate budget of ten retries and at most 120 seconds
+of total waiting per turn. Waits follow `Retry-After` or the server's seconds /
+milliseconds hint, with each wait capped at 60 seconds. A rate-limit response
+does not consume a format-repair attempt. Successful requests have no local delay.
 HTTP 413 reduces the model context budget before retrying. Recoverable generation
 errors, including errors inside HTTP 200 event streams, receive corrective
-feedback; transient connection/server failures use bounded backoff. Waits and
+feedback. If Groq's rejected generation identifies a malformed `edit_file` call
+and the same server exposes `write_file`, recovery temporarily offers the simpler
+whole-file write tool instead of repeating the malformed edit. The rejected
+payload is never repaired or executed; the model must generate a new call, which
+still passes through the original schema validation and execution policy.
+Transient connection/server failures use bounded backoff. Waits and
 repairs appear as CLI status events and remain cancellable. Once response text
 has been exposed, the stream is not replayed. Executed MCP operations are never
 automatically retried by this recovery mechanism.
@@ -131,7 +150,7 @@ remain on disk. The assistant cannot increase the account's allowance. Model
 output can still be semantically wrong, so run project tests and review edits.
 Daily-limit errors are not retried even when a short retry hint is present.
 Provider rate/daily/capacity error codes survive the agent loop so the evaluation
-runner can checkpoint and pause. See [free-tier run/resume instructions](../evaluations/model_comparison/README.md#free-tier-pacing-and-resume).
+runner can checkpoint and pause. See [free-tier run/resume instructions](../evaluations/model_comparison/README.md#free-tier-limits-and-resume).
 
 See Groq's [tool API reference](https://console.groq.com/docs/api-reference),
 [local tool calling](https://console.groq.com/docs/tool-use/local-tool-calling),

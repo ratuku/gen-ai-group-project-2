@@ -22,17 +22,18 @@ baseline results, diagnostic pilot details, fix notes, or a partial retest.
 | Updated architecture and reasons for changes | Page 6 |
 | State diagram | Page 7 |
 | Three complete sequence diagrams | Pages 8-10 |
+| Completed OpenAI coding comparison | Page 11 |
+| All 20 OpenAI RAG answers and review | Page 12 |
 
-The report includes the baseline, intermediate diagnostics, and partial free-tier
-live results. The final
-reliability policy still needs a complete live retest; the PDF states this
-limitation. It does not automatically incorporate later runs made in PowerShell.
-Update the evidence and rebuild before submission if new results become available.
+The report includes historical Groq results and the completed OpenAI follow-up:
+eight coding slots (seven passes) and all 20 paired RAG answers. The original Groq
+checkpoint remains quota-limited. Provider/settings differences and the small
+sample prevent treating the follow-up as a controlled improvement estimate.
 
 Supporting traces and results remain in `evaluations/model_comparison/results/`.
 The measured retrieval and answer comparison is in `evaluations/rag_evaluation/`;
-the report includes all ten retrieval questions and five complete generated answer
-pairs, with the remaining answers blocked by Groq's daily cap. Explicit judgments,
+the report includes the historical five Groq pairs and ten new OpenAI pairs using
+the same frozen retrieval evidence. Explicit judgments,
 prompt/source hashes, and reproducible metrics are retained. Older three-query
 observations in `docs/rag-reranking.md` remain historical context.
 The original diagram is `init-architecture.drawio2.pdf` at the repository root.

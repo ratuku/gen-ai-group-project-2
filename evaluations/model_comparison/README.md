@@ -1,5 +1,21 @@
 # Model comparison (ticket #14)
 
+## Completed OpenAI follow-up
+
+[Current findings](results/2026-10-15-openai-complete/OPENAI_FOLLOWUP.md) cover
+all eight coding slots: GPT-4.1 mini passed 3/4 and GPT-4.1 passed 4/4. The original
+Groq checkpoint and interrupted first OpenAI batch remain preserved.
+
+Run a separate OpenAI batch with an existing `OPENAI_API_KEY` in the environment:
+
+```powershell
+.\.venv\Scripts\python.exe -m evaluations.model_comparison.run --provider openai --models gpt-4.1-mini-2025-04-14 gpt-4.1-2025-04-14 --output evaluations/model_comparison/local/new-openai-run --max-iterations 8 --timeout 180
+```
+
+This uses the existing OpenAI adapter: SDK-default sampling, 4,096 completion
+tokens, bounded context and retries. Model/provider/settings are saved with source
+snapshots; results are not merged with historical Groq trials.
+
 These are supporting test records. The single written submission report is
 [PROJECT_REPORT.pdf](../../PROJECT_REPORT.pdf) at the repository root.
 
@@ -17,7 +33,7 @@ code changes, diagnostic live runs, and the daily quota that limited further tes
 | [PILOT_2_RUN_DETAILS.md](results/2026-10-15-fixes/pilot-2/PILOT_2_RUN_DETAILS.md) | Second intermediate diagnostic batch |
 | [PARTIAL_RETEST_RESULTS.md](results/2026-10-15-free-tier/PARTIAL_RETEST_RESULTS.md) | Latest published quota-paused batch |
 | [BASELINE_SETUP_CHECKS.md](BASELINE_SETUP_CHECKS.md) | Historical setup and smoke-check record |
-| [FREE_TIER_TESTING_NOTES.md](FREE_TIER_TESTING_NOTES.md) | Pacing, resume, syntax validation, and current test notes |
+| [FREE_TIER_TESTING_NOTES.md](FREE_TIER_TESTING_NOTES.md) | Historical pacing validation, resume, and syntax validation notes |
 
 New local runs write `TEST_RESULTS.md`. Historical metadata keeps the filenames
 that existed when each run was captured; those snapshots are not navigation links.
@@ -29,11 +45,11 @@ workspace and conversation. No scripted provider is used for comparison results.
 
 ## Setup and run
 
-### Free-tier pacing and resume
+### Free-tier limits and resume
 
 For the configured Windows project, this wrapper finds the virtual environment
-and loads the saved environment variable without displaying it. Continue the
-existing partial live batch with:
+and loads the saved environment variable without displaying it. Continue
+an existing batch created with the current code with:
 
 ```powershell
 .\scripts\run_model_comparison.ps1 -Resume
@@ -48,15 +64,15 @@ Wait for capacity, then use the same resume command. For an independent new batc
 .\scripts\run_model_comparison.ps1 -Resume -OutputDirectory 'evaluations/model_comparison/local/my-new-run'
 ```
 
-The default directory is `local/free-tier-validation-live`, containing the new
-partial live batch. Use `-Resume` to continue it. For an independent new
-batch use `-OutputDirectory` with a new path. The wrapper recovers the saved
+The default directory is `local/free-tier-validation-live`, containing the earlier
+partial live batch. After changing source code, use `-OutputDirectory` with a new
+path. The wrapper recovers the saved
 configuration path on resume; `-ConfigPath` can choose a configuration for a new
 batch. These checkpoints apply only to
 new-format runs; historical baseline/pilot folders cannot be resumed.
 
 The equivalent Python command accepts `--resume` with the original `--output`,
-models, repeats, scope, config, timeout, iteration limit, and pacing budget.
+models, repeats, scope, config, timeout, and iteration limit.
 Source/config hashes and the Python version must match. Changed code needs a new
 batch so implementations are not mixed silently. An OS lock prevents two runners
 from writing to the same batch. Completed coding or assistant failures are retained
@@ -64,16 +80,13 @@ and skipped just like passes. Only provider-blocked slots are retried, in fresh
 workspaces, with all prior attempts retained. An interrupted unscored workspace is
 also preserved, but its task restarts rather than resuming an agent mid-tool-call.
 
-Pacing defaults to an estimated **7,000 tokens per minute per model**, with at
-least 2.1 seconds between starts. It reserves UTF-8 payload bytes / 3 (rounded up)
-plus the 2,048-token output maximum. This heuristic is not a tokenizer or a quota
-guarantee. It compacts requests to fit the estimate, waits in visible cancellable
-steps, and shares the budget across tasks for each model in the batch. A resumed
-process begins conservatively with a full-minute reservation. Other programs'
-usage and the daily allowance are unknown. `--tokens-per-minute` can lower the
-budget; the application cannot increase Groq's account limits.
+The runner sends requests without local pacing or a startup reservation on
+resume. The former `--tokens-per-minute` / `-TokensPerMinute` options have been
+removed. Short API rate-limit responses still produce visible, bounded retries;
+the application cannot increase Groq's account limits. Batches recorded before
+this change require a new output directory because the source hashes differ.
 
-Explicit provider pacing/retry waits do not consume the active task timeout;
+Explicit provider retry waits do not consume the active task timeout;
 reported elapsed time still includes those waits. Provider capacity errors pause
 the batch immediately, rather than attempting the remaining tasks against an
 exhausted allowance. Daily-cap errors are not retried even with a short wait hint.

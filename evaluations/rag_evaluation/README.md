@@ -1,5 +1,23 @@
 # RAG evaluation: cosine baseline versus cross-encoder reranking
 
+## Completed OpenAI answers
+
+The [OpenAI follow-up](results/2026-10-15-openai/OPENAI_RAG_RESULTS.md) contains
+all 20 answers, generated anew using GPT-4.1 mini and the exact frozen paired
+retrieval passages. Both answers in each pair use the same OpenAI model; historical
+Groq answers remain unchanged. The follow-up includes new explicit judgments and
+citation validation, including grouped and malformed IDs.
+
+```powershell
+.\.venv\Scripts\python.exe -m evaluations.rag_evaluation.openai_answers --output evaluations/rag_evaluation/results/my-new-openai-run
+.\.venv\Scripts\python.exe -m evaluations.rag_evaluation.score evaluations/rag_evaluation/results/2026-10-15-openai
+```
+
+Generation requires an existing `OPENAI_API_KEY` in the environment. Scoring is
+local. Frozen retrieval/timings are reused, not remeasured. The original experiment
+below used different sampling and a partial Groq answer set; do not use old/new
+fact totals as a controlled model ranking.
+
 This is supporting evaluation evidence. The single submission report is
 [PROJECT_REPORT.pdf](../../PROJECT_REPORT.pdf), with the RAG findings on page 3.
 See [the measured results](results/2026-10-15/RAG_COMPARISON_RESULTS.md) for the

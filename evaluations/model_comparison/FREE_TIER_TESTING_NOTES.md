@@ -2,7 +2,13 @@
 
 Supporting test record. The single submission report is [PROJECT_REPORT.pdf](../../PROJECT_REPORT.pdf).
 
-The application now paces requests, checkpoints evaluation batches, and checks
+Historical record: automatic request pacing has since been removed from both
+the CLI and evaluation runner. The pacing checks and live results below describe
+the earlier implementation. Actual API rate-limit retries, checkpoints, and saved
+Python syntax validation remain. Start a new batch after the source change;
+see [current run instructions](README.md#free-tier-limits-and-resume).
+
+At the time of this validation, the application paced requests, checkpointed evaluation batches, and checked
 saved Python syntax. None of these changes raises Groq's account limits or
 guarantees correct model-generated logic. No paid plan or billing change is needed.
 
@@ -65,4 +71,4 @@ and are not supplied to the model for repair. Saved code can parse and still fai
 
 The original baseline and two intermediate pilots remain separate. A new batch
 is required for these changes; older reports cannot be resumed with the new runner.
-See [run/resume instructions](README.md#free-tier-pacing-and-resume).
+See [run/resume instructions](README.md#free-tier-limits-and-resume).

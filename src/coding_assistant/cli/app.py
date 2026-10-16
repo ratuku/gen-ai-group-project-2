@@ -24,6 +24,7 @@ HELP = "/help: show commands | /servers: connections | /tools: tools | /exit or 
 AgentFactory = Callable[[MCPClientContract], AgentLoop]
 ReadPrompt = Callable[[str], Awaitable[str]]
 PROVIDER_FACTORIES = {
+    "openai": "coding_assistant.providers.openai:create_agent",
     "groq": "coding_assistant.providers.groq:create_agent",
     "ollama": "coding_assistant.providers.ollama:create_agent",
 }

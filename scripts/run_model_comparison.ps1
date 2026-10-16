@@ -1,8 +1,7 @@
 param(
     [switch]$Resume,
     [string]$OutputDirectory = '',
-    [string]$ConfigPath = '',
-    [int]$TokensPerMinute = 7000
+    [string]$ConfigPath = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -39,8 +38,7 @@ $runArguments = @(
     '--models', 'openai/gpt-oss-20b', 'openai/gpt-oss-120b',
     '--output', $OutputDirectory,
     '--config', $ConfigPath,
-    '--repeats', '1',
-    '--tokens-per-minute', "$TokensPerMinute"
+    '--repeats', '1'
 )
 if ($Resume) { $runArguments += '--resume' }
 

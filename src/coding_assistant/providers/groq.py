@@ -16,11 +16,12 @@ from groq.types.chat import ChatCompletionMessageParam, ChatCompletionToolParam
 
 from coding_assistant.agent import BasicAgentLoop
 from coding_assistant.contracts import MCPClient, Payload
-from coding_assistant.providers.groq_context import ToolNames, request_view, tool_view
-from coding_assistant.providers.groq_pacing import RequestPacer
+from coding_assistant.providers.groq_context import ToolNames, request_view, tool_view, task_progress
 
 
-DEFAULT_MODEL = "openai/gpt-oss-20b"
+DEFAULT_MODEL = "openai/gpt-oss-120b"
+MAX_RATE_LIMIT_RETRIES = 10
+MAX_RATE_LIMIT_WAIT_SECONDS = 120.0
 
 
 class GroqProviderError(ValueError):
@@ -100,7 +101,6 @@ class GroqProvider:
         client_factory: ClientFactory | None = None,
         max_attempts: int = 5,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
-        pacer: RequestPacer | None = None,
     ) -> None:
         if not isinstance(model, str) or not model.strip():
             raise ValueError("Groq model must be a non-empty string")
@@ -113,7 +113,6 @@ class GroqProvider:
             raise ValueError("max_attempts must be between 1 and 5")
         self.max_attempts = max_attempts
         self._sleep = sleep
-        self._pacer = pacer if pacer is not None else (RequestPacer() if client_factory is None else None)
 
     async def stream(
         self,
@@ -126,24 +125,27 @@ class GroqProvider:
             native_tools = _convert_tools(tools)
             names = ToolNames(tools)
             native_tools = tool_view(native_tools, names)
+            summary_only = task_progress(native_messages, names).summary_only
+            if summary_only:
+                native_tools = ()
+                yield {"type": "status", "content": "Checks passed; ending repeated reads with a final summary."}
             client = self._client_factory(self._api_key)
             budget = 18000
-            if self._pacer is not None:
-                budget = min(budget, (self._pacer.tokens_per_minute - 2048) * 3)
             feedback = ""
-            for attempt in range(self.max_attempts):
+            attempt = 0
+            rate_retries = 0
+            rate_waited = 0.0
+            disabled_aliases: set[str] = set()
+            while True:
                 emitted = False
                 try:
-                    view = request_view(native_messages, native_tools, names, budget=budget, feedback=feedback)
-                    if self._pacer is not None:
-                        # A heuristic, not the model tokenizer. Include schemas and
-                        # reserve maximum output, including GPT-OSS reasoning.
-                        size = len(json.dumps({"messages": view, "tools": native_tools}, ensure_ascii=False,
-                                              separators=(",", ":")).encode("utf-8"))
-                        estimate = math.ceil(size / 3) + 2048
-                        async for status in self._pacer.reserve(estimate):
-                            yield status
-                    response = await client.chat(model=self.model, messages=view, tools=native_tools, stream=True)
+                    offered_tools = tuple(tool for tool in native_tools
+                                          if _tool_alias(tool) not in disabled_aliases)
+                    view = request_view(native_messages, offered_tools, names,
+                                        budget=budget - 700 if summary_only else budget, feedback=feedback)
+                    if summary_only:
+                        view = _summary_view(view)
+                    response = await client.chat(model=self.model, messages=view, tools=offered_tools, stream=True)
                     pending: dict[int, _PendingToolCall] = {}
                     async for chunk in response:
                         for event in _consume_chunk(chunk, pending):
@@ -151,7 +153,11 @@ class GroqProvider:
                             yield event
                     # Validate the entire batch before exposing any executable call.
                     calls = [names.resolve(pending[index].finish()) for index in sorted(pending)]
-                    invalid = [str(call["name"]) for call in calls if call["name"] not in names.original]
+                    if summary_only and calls:
+                        raise GroqProviderError("No tools are available for this summary. Return a final answer based on the recorded checks.")
+                    invalid = [str(call["name"]) for call in calls
+                               if call["name"] not in names.original
+                               or names.forward[str(call["name"])] in disabled_aliases]
                     if invalid:
                         raise GroqProviderError(
                             f"Unknown or ambiguous tool names {invalid!r}; generate exact supplied aliases"
@@ -163,29 +169,41 @@ class GroqProvider:
                     yield {"type": "completed"}
                     return
                 except (APIError, GroqProviderError) as error:
-                    if emitted or attempt + 1 == self.max_attempts:
+                    if emitted:
+                        raise
+                    # Quota waits do not consume the separate format/service
+                    # recovery budget. Only wait after an actual 429 response.
+                    if isinstance(error, APIStatusError) and error.status_code == 429:
+                        if _daily_limit(error):
+                            raise
+                        wait = _retry_delay(error)
+                        if (wait is None or rate_retries >= MAX_RATE_LIMIT_RETRIES
+                                or rate_waited + wait > MAX_RATE_LIMIT_WAIT_SECONDS):
+                            raise
+                        rate_retries += 1
+                        rate_waited += wait
+                        yield {"type": "status", "content": (
+                            f"Groq rate limit; waiting {wait:g}s "
+                            f"(rate-limit retry {rate_retries}/{MAX_RATE_LIMIT_RETRIES})"
+                        ), "wait_seconds": wait}
+                        await self._sleep(wait)
+                        continue
+                    if attempt + 1 == self.max_attempts:
                         raise
                     delay = 0.0
                     if isinstance(error, (APIConnectionError, APITimeoutError)):
                         delay = float(2 ** attempt)
                         reason = f"Temporary Groq connection failure; waiting {delay:g}s"
                     elif isinstance(error, APIStatusError):
-                        if error.status_code == 429:
-                            if _daily_limit(error):
-                                raise
-                            wait = _retry_delay(error)
-                            if wait is None:
-                                raise
-                            delay = wait
-                            reason = f"Groq rate limit; waiting {delay:g}s"
-                        elif error.status_code == 413:
+                        if error.status_code == 413:
                             budget = max(min(7000, budget), int(budget * 0.7))
                             reason = "Groq request too large; reducing model context"
                         elif error.status_code == 400 and any(
                             marker in _error_detail(error).lower()
                             for marker in ("tool", "parsing", "parse", "generation")
                         ):
-                            feedback = "The previous response was rejected before any tools ran. Return valid JSON arguments and use only exact supplied tool names. " + _error_detail(error)[:350]
+                            feedback, disabled = _tool_repair_feedback(error, names)
+                            disabled_aliases.update(disabled)
                             reason = "Repairing rejected tool generation"
                         elif error.status_code in {408, 409} or error.status_code >= 500:
                             delay = float(2 ** attempt)
@@ -195,7 +213,8 @@ class GroqProvider:
                     elif isinstance(error, APIError):
                         if not any(marker in _error_detail(error).lower() for marker in ("tool", "parse", "parsing", "generation")):
                             raise
-                        feedback = "The previous stream was rejected before any tools ran. Return valid JSON arguments and exact supplied tool names. " + _error_detail(error)[:350]
+                        feedback, disabled = _tool_repair_feedback(error, names)
+                        disabled_aliases.update(disabled)
                         reason = "Repairing rejected tool stream"
                     else:
                         feedback = "The previous response was unusable; no tools ran. " + str(error) + ". Return a valid tool call or a final answer."
@@ -204,6 +223,7 @@ class GroqProvider:
                            "wait_seconds": delay}
                     if delay:
                         await self._sleep(delay)
+                    attempt += 1
         except asyncio.CancelledError:
             raise
         except APITimeoutError as error:
@@ -517,6 +537,74 @@ def _error_detail(error: BaseException) -> str:
     return str(error) or type(error).__name__
 
 
+def _tool_alias(tool: Mapping[str, object]) -> str:
+    function = tool.get("function")
+    return str(function.get("name", "")) if isinstance(function, Mapping) else ""
+
+
+def _summary_view(messages: Sequence[Mapping[str, object]]) -> list[Mapping[str, object]]:
+    """Render completed tool interactions as data, without native call markers.
+
+    GPT-OSS can keep generating calls from its native tool history even when no
+    tools are offered. A plain transcript and final user instruction remove that
+    continuation cue without changing the original agent history.
+    """
+    result: list[Mapping[str, object]] = []
+    for message in messages:
+        calls = message.get("tool_calls")
+        if isinstance(calls, list):
+            operations = []
+            for call in calls:
+                function = call.get("function", {})
+                try:
+                    arguments = json.loads(str(function.get("arguments", "{}")))
+                except ValueError:
+                    arguments = {}
+                operations.append({"name": function.get("name"),
+                                   "path": arguments.get("path") if isinstance(arguments, Mapping) else None})
+            result.append({"role": "assistant", "content": "Recorded operations (data): " + json.dumps(operations)})
+        elif message.get("role") == "tool":
+            result.append({"role": "assistant", "content": "Recorded tool result (data): " + str(message.get("content", ""))})
+        else:
+            result.append(dict(message))
+    result.append({"role": "user", "content": (
+        "Write the final response now as plain text. Report only the actions and check results "
+        "recorded above. Do not request more tools. Do not infer earlier test results from the task wording. "
+        "If something remains unfinished, say so explicitly."
+    )})
+    return result
+
+
+def _tool_repair_feedback(error: APIError, names: ToolNames) -> tuple[str, set[str]]:
+    feedback = ("The previous response was rejected before any tools ran. "
+                "Return valid JSON arguments and use only exact supplied tool names. "
+                + _error_detail(error)[:350])
+    body = error.body
+    if isinstance(body, Mapping) and isinstance(body.get("error"), Mapping):
+        body = body["error"]
+    failed = body.get("failed_generation") if isinstance(body, Mapping) else None
+    if not isinstance(failed, str):
+        return feedback, set()
+    # Use the rejected tool name only to select a different generation strategy.
+    # Never repair or execute the provider's failed_generation payload.
+    match = re.search(r'"name"\s*:\s*"([^"\r\n]+)"', failed)
+    if match is None:
+        return feedback, set()
+    alias = match.group(1)
+    original = names.reverse.get(alias, alias)
+    if original not in names.original or not original.endswith(".edit_file"):
+        return feedback, set()
+    write_name = original.rsplit(".", 1)[0] + ".write_file"
+    if write_name not in names.original:
+        return feedback, set()
+    write_alias = names.forward[write_name]
+    feedback += (f" Your {names.forward[original]} call was malformed. That tool is unavailable "
+                 f"for this model step. Use {write_alias} with path and content containing the "
+                 "complete updated file, preserving unrelated code. Encode newlines and quotes "
+                 "as JSON escapes. Follow the original task's requested checks and ordering.")
+    return feedback, {names.forward[original]}
+
+
 def _daily_limit(error: APIStatusError) -> bool:
     return error.status_code == 429 and any(marker in _error_detail(error).lower()
                                            for marker in ("tokens per day", "requests per day", "(tpd)", "(rpd)"))
@@ -524,11 +612,14 @@ def _daily_limit(error: APIStatusError) -> bool:
 
 def _retry_delay(error: APIStatusError) -> float | None:
     value = error.response.headers.get("retry-after", "")
+    divisor = 1.0
     if not value:
-        match = re.search(r"try again in ([0-9.]+)s", _error_detail(error), re.IGNORECASE)
-        value = match.group(1) if match else ""
+        match = re.search(r"try again in ([0-9.]+)(ms|s)\b", _error_detail(error), re.IGNORECASE)
+        if match:
+            value = match.group(1)
+            divisor = 1000.0 if match.group(2).lower() == "ms" else 1.0
     try:
-        delay = float(value)
+        delay = float(value) / divisor
     except ValueError:
         return None
     return max(0.1, delay) if math.isfinite(delay) and 0 <= delay <= 60 else None

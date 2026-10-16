@@ -1,0 +1,7 @@
+https://github.com/ratuku/gen-ai-group-project-2
+
+Public repository verified through GitHub.
+IMPORTANT: The latest report, OpenAI evaluation evidence and implementation are prepared
+on branch codex/submission-openai-followup. Merge its pull request into main
+before submitting the default-branch repository link.
+The source snapshot ZIP is a backup, not a substitute for the repository link/history.

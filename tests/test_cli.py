@@ -557,6 +557,7 @@ async def test_normal_cli_keeps_all_configured_servers(
 @pytest.mark.parametrize("arguments, provider", [
     ([], "groq"), (["--provider", "groq"], "groq"),
     (["--provider", "ollama"], "ollama"),
+    (["--provider", "openai"], "openai"),
 ])
 @pytest.mark.asyncio
 async def test_provider_shortcuts_and_default_use_real_agent_factory(
