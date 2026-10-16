@@ -1,0 +1,7 @@
+{
+  "status": "interrupted_grader_encoding",
+  "scored_slots": 2,
+  "interrupted_slot": "gpt-4.1-mini feature",
+  "replacement_batch": "../2026-10-15-openai-complete",
+  "reason": "Isolated Python child used cp1252 while parent decoded UTF-8; grader now explicitly uses UTF-8. Scored runs and interrupted workspace retained."
+}

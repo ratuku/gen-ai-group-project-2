@@ -44,8 +44,8 @@ def grade(task: Task, workspace: Path) -> dict[str, object]:
     )}
     try:
         result = subprocess.run(
-            [sys.executable, "-I", "-B", "-c", code], cwd=workspace,
-            capture_output=True, text=True, timeout=15, env=env,
+            [sys.executable, "-I", "-X", "utf8", "-B", "-c", code], cwd=workspace,
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=15, env=env,
         )
         return {
             "passed": result.returncode == 0,
@@ -118,7 +118,7 @@ async def run_task(
                         wait = event.get("wait_seconds", 0)
                         deadline = active_timeout.when()
                         if isinstance(wait, (int, float)) and math.isfinite(wait) and 0 < wait <= 60 and deadline is not None:
-                            # Explicit provider pacing/retry waits are not coding
+                            # Explicit provider retry waits are not coding
                             # time. The full wall time still appears in evidence.
                             active_timeout.reschedule(deadline + wait)
         except TimeoutError:
@@ -180,7 +180,7 @@ def write_report(output: Path, runs: list[dict[str, object]], planned: int | Non
         "A successful retrieval call does not establish relevance or correct source grounding.",
         "Small synthetic tasks do not establish general coding quality. Refactor checks verify",
         "behavior and helper presence; inspect the final source to assess design quality.",
-        "Elapsed time includes discovery, pacing, retries, and tool work; excludes grading; it is not token throughput.",
+        "Elapsed time includes discovery, retries, and tool work; excludes grading; it is not token throughput.",
         "Explicit quota waits are excluded from the active task deadline. Service-side changes can affect results.",
         "No token cost, local-provider comparison, or advanced-RAG benefit is measured here.",
         "Filesystem-only runs omit external and custom-RAG integration; see metadata.json for scope.",
@@ -190,9 +190,10 @@ def write_report(output: Path, runs: list[dict[str, object]], planned: int | Non
 
 
 async def evaluate(args: argparse.Namespace) -> int:
-    key = args.api_key_file.read_text(encoding="utf-8").strip() if args.api_key_file else os.environ.get("GROQ_API_KEY", "").strip()
+    key_name = "OPENAI_API_KEY" if getattr(args, "provider", "groq") == "openai" else "GROQ_API_KEY"
+    key = args.api_key_file.read_text(encoding="utf-8").strip() if args.api_key_file else os.environ.get(key_name, "").strip()
     if not key:
-        raise ValueError("Configure GROQ_API_KEY before running live evaluation")
+        raise ValueError(f"Configure {key_name} before running live evaluation")
     if len(set(model.strip() for model in args.models)) != 2 or not all(model.strip() for model in args.models):
         raise ValueError("Choose two distinct, nonempty model IDs")
     # Catch missing/invalid configuration before creating an output checkpoint.
@@ -208,14 +209,16 @@ async def evaluate(args: argparse.Namespace) -> int:
 
 
 async def _evaluate_locked(args: argparse.Namespace, output: Path) -> int:
-    from coding_assistant.providers.groq import GroqProvider
-    from coding_assistant.providers.groq_pacing import RequestPacer
+    from coding_assistant.providers.groq import GroqProvider, MAX_RATE_LIMIT_RETRIES, MAX_RATE_LIMIT_WAIT_SECONDS
+    from coding_assistant.providers.openai import OpenAIProvider
 
-    key = os.environ.get("GROQ_API_KEY", "").strip()
+    provider_name = getattr(args, "provider", "groq")
+    key_name = "OPENAI_API_KEY" if provider_name == "openai" else "GROQ_API_KEY"
+    key = os.environ.get(key_name, "").strip()
     if args.api_key_file:
         key = args.api_key_file.read_text(encoding="utf-8").strip()
     if not key:
-        raise ValueError("Configure GROQ_API_KEY or --api-key-file before running live evaluation")
+        raise ValueError(f"Configure {key_name} or --api-key-file before running live evaluation")
     models = [model.strip() for model in args.models]
     if len(set(models)) != 2 or not all(models):
         raise ValueError("Choose two distinct, nonempty model IDs")
@@ -232,16 +235,16 @@ async def _evaluate_locked(args: argparse.Namespace, output: Path) -> int:
         "started_utc": datetime.now(timezone.utc).isoformat(), "git_revision": revision,
         "python": platform.python_version(), "platform": platform.platform(),
         "working_tree_status": dirty,
-        "models": models, "provider": "groq", "repeats": args.repeats,
+        "models": models, "provider": provider_name, "repeats": args.repeats,
         "scope": "filesystem-only" if args.filesystem_only else "all-configured-servers",
         "config_path": str(args.config.resolve()),
         "config_sha256": hashlib.sha256(args.config.read_bytes()).hexdigest(),
         "max_iterations": args.max_iterations, "timeout_seconds": args.timeout,
         "sampling": "Groq temperature=0; GPT-OSS reasoning=low; max_completion_tokens=2048",
         "request_context_budget_bytes": 18000, "provider_max_attempts": 5,
-        "pacing_tokens_per_minute": args.tokens_per_minute,
-        "pacing_estimate": "UTF-8 payload bytes / 3 rounded up + 2048 maximum output; approximate",
-        "deadline_policy": "active work; explicit pacing/retry waits excluded",
+        "provider_max_rate_limit_retries": MAX_RATE_LIMIT_RETRIES,
+        "provider_max_rate_limit_wait_seconds": MAX_RATE_LIMIT_WAIT_SECONDS,
+        "deadline_policy": "active work; explicit retry waits excluded",
         "code_validation": "saved Python syntax through policy-controlled filesystem reads; hidden grading checks remain separate",
         "execution_mode": "auto",
         "tasks": [task.name for task in tasks],
@@ -256,6 +259,10 @@ async def _evaluate_locked(args: argparse.Namespace, output: Path) -> int:
             for path in sorted(Path(__file__).parent.glob("*.py"))
         },
     }
+    if provider_name == "openai":
+        metadata.update({"sampling": "OpenAI Chat Completions; SDK-default temperature; max_completion_tokens=4096; parallel_tool_calls=false; store=false",
+                         "request_context_budget_bytes": 30000, "provider_max_attempts": 3,
+                         "provider_max_rate_limit_retries": 2, "provider_max_rate_limit_wait_seconds": 60})
     runs: list[dict[str, object]] = []
     if args.resume:
         saved = json.loads((output / "metadata.json").read_text(encoding="utf-8"))
@@ -276,13 +283,6 @@ async def _evaluate_locked(args: argparse.Namespace, output: Path) -> int:
         ).stdout
         (output / "dependencies.txt").write_text(dependencies, encoding="utf-8")
     planned = len(tasks) * len(models) * args.repeats
-    pacers = {model: RequestPacer(args.tokens_per_minute) for model in models}
-    # A new process cannot know the previous rolling-minute usage. A conservative
-    # initial reservation prevents an immediate burst when resuming.
-    if args.resume:
-        for pacer in pacers.values():
-            async for _ in pacer.reserve(args.tokens_per_minute):
-                pass
     for repeat in range(1, args.repeats + 1):
         # Alternate model order each repeat to reduce systematic order effects.
         for task in tasks:
@@ -303,7 +303,7 @@ async def _evaluate_locked(args: argparse.Namespace, output: Path) -> int:
                     attempt += 1
                     workspace = base / f"{task.name}-{repeat}-attempt-{attempt}"
                 result = await run_task(
-                    task, GroqProvider(model, api_key=key, pacer=pacers[model]), workspace,
+                    task, (OpenAIProvider(model, api_key=key) if provider_name == "openai" else GroqProvider(model, api_key=key)), workspace,
                     config_path=args.config, filesystem_only=args.filesystem_only,
                     timeout=args.timeout, max_iterations=args.max_iterations,
                 )
@@ -328,19 +328,19 @@ async def _evaluate_locked(args: argparse.Namespace, output: Path) -> int:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--provider", choices=("groq", "openai"), default="groq")
     parser.add_argument("--models", nargs=2, required=True, metavar=("MODEL_A", "MODEL_B"))
     parser.add_argument("--config", type=Path, default=ROOT / "config/mcp.json")
     parser.add_argument("--output", type=Path, required=True, help="New directory, or the same directory with --resume")
     parser.add_argument("--resume", action="store_true", help="Keep completed slots; retry provider-blocked slots in fresh workspaces")
-    parser.add_argument("--tokens-per-minute", type=int, default=7000, help="Conservative estimated budget per model (default 7000)")
     parser.add_argument("--api-key-file", type=Path, help="Local file containing only the Groq API key")
     parser.add_argument("--filesystem-only", action="store_true")
     parser.add_argument("--repeats", type=int, default=1)
     parser.add_argument("--max-iterations", type=int, default=8)
     parser.add_argument("--timeout", type=float, default=180)
     args = parser.parse_args(argv)
-    if args.repeats < 1 or args.max_iterations < 1 or not 0 < args.timeout < float("inf") or args.tokens_per_minute < 3000:
-        parser.error("repeats, max-iterations, and timeout must be positive and finite; tokens-per-minute >= 3000")
+    if args.repeats < 1 or args.max_iterations < 1 or not 0 < args.timeout < float("inf"):
+        parser.error("repeats, max-iterations, and timeout must be positive and finite")
     try:
         return asyncio.run(evaluate(args))
     except (ValueError, OSError) as error:

@@ -21,7 +21,7 @@ class BasicAgentLoop:
     """
 
     def __init__(
-        self, provider: ModelProvider, mcp_client: MCPClient, *, max_iterations: int = 8,
+        self, provider: ModelProvider, mcp_client: MCPClient, *, max_iterations: int = 40,
     ) -> None:
         if isinstance(max_iterations, bool) or not isinstance(max_iterations, int) or max_iterations < 1:
             raise ValueError("max_iterations must be a positive integer")

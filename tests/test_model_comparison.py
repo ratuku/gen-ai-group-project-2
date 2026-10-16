@@ -15,6 +15,13 @@ from evaluations.model_comparison.checkpoint import latest_runs, output_lock, va
 from evaluations.model_comparison.tasks import TASKS
 
 
+def test_grader_retains_unicode_failure_output(tmp_path: Path) -> None:
+    (tmp_path / "solution.py").write_text("raise ValueError('caf\u00e9')\n", encoding="utf-8")
+    result = grade(TASKS[0], tmp_path)
+    assert result["passed"] is False
+    assert "caf\u00e9" in str(result["detail"])
+
+
 def test_original_bug_and_stubs_fail_checks(tmp_path: Path) -> None:
     for task in TASKS:
         (tmp_path / "solution.py").write_text(task.source, encoding="utf-8")
@@ -152,7 +159,7 @@ async def test_pause_resume_preserves_attempts_and_skips_completed_slots(tmp_pat
     monkeypatch.setenv("GROQ_API_KEY", "checkpoint-test-key")
     args = argparse.Namespace(models=["model-a", "model-b"], output=tmp_path / "batch",
                               config=ROOT / "config/mcp.json", api_key_file=None, filesystem_only=True,
-                              repeats=1, max_iterations=8, timeout=180, resume=False, tokens_per_minute=7000)
+                              repeats=1, max_iterations=8, timeout=180, resume=False)
     calls: list[tuple[str, str]] = []
     blocked_once = False
 
@@ -190,11 +197,11 @@ async def test_pause_resume_preserves_attempts_and_skips_completed_slots(tmp_pat
     assert "5/7" in report
     # Completed resume makes no more model/task calls.
     assert await evaluate(args) == 1 and len(calls) == 7
-    args.tokens_per_minute = 6000
-    with pytest.raises(ValueError, match="pacing_tokens_per_minute"):
+    args.timeout = 120
+    with pytest.raises(ValueError, match="timeout_seconds"):
         await evaluate(args)
     assert len(calls) == 7
-    args.tokens_per_minute = 7000
+    args.timeout = 180
     (args.output / runs[0]["workspace"] / "solution.py").write_bytes(b"changed\n")
     with pytest.raises(ValueError, match="Saved evaluation source changed"):
         await evaluate(args)
@@ -207,7 +214,7 @@ async def test_resume_preserves_interrupted_workspace(tmp_path: Path, monkeypatc
     monkeypatch.setenv("GROQ_API_KEY", "checkpoint-test-key")
     args = argparse.Namespace(models=["a", "b"], output=tmp_path / "interrupted",
                               config=ROOT / "config/mcp.json", api_key_file=None, filesystem_only=True,
-                              repeats=1, max_iterations=8, timeout=180, resume=False, tokens_per_minute=7000)
+                              repeats=1, max_iterations=8, timeout=180, resume=False)
     workspaces: list[Path] = []
 
     async def interrupted(task: object, provider: object, workspace: Path, **kwargs: object) -> dict[str, object]:
@@ -227,16 +234,16 @@ async def test_resume_preserves_interrupted_workspace(tmp_path: Path, monkeypatc
     assert json.loads((args.output / "results.json").read_text()) == []
 
 
-class PacedProvider:
+class RetryingProvider:
     async def stream(self, messages: Sequence[Payload], tools: Sequence[Payload]) -> AsyncIterator[Payload]:
-        yield {"type": "status", "content": "Test pacing wait", "wait_seconds": 2.5}
+        yield {"type": "status", "content": "Test rate-limit retry wait", "wait_seconds": 2.5}
         await asyncio.sleep(2.5)
         yield {"type": "text", "content": "No edit"}
 
 
 @pytest.mark.asyncio
-async def test_explicit_pacing_wait_is_not_counted_as_task_timeout(tmp_path: Path) -> None:
-    result = await run_task(TASKS[0], PacedProvider(), tmp_path / "paced",
+async def test_explicit_retry_wait_is_not_counted_as_task_timeout(tmp_path: Path) -> None:
+    result = await run_task(TASKS[0], RetryingProvider(), tmp_path / "retry",
                             config_path=ROOT / "config/mcp.json", filesystem_only=True,
                             timeout=2, max_iterations=4)
     assert result["completion_reason"] == "answered"

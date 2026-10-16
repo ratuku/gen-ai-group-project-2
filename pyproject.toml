@@ -13,6 +13,7 @@ dependencies = [
     "jsonschema>=4.20,<5",
     "mcp>=2.3,<3",
     "ollama>=0.6.3,<0.7",
+    "openai>=2,<3",
     "prompt-toolkit>=3.0.48,<4",
     "rich>=13.7,<15",
 ]
@@ -64,6 +65,7 @@ module = [
     "test_groq_provider",
     "test_groq_recovery",
     "test_ollama_provider",
+    "test_openai_provider",
     "test_filesystem_mcp_windows",
     "test_rag_preparation",
     "test_rag_retrieval",

@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "description": "Fixed before retrieval: eight answerable questions across all four documents, one exact-API coverage probe, and one unrelated negative control. Facts are reference-answer expectations, not keyword relevance judgments.",
+  "cases": [
+    {
+      "id": "mcp-tool",
+      "query": "How do I register a Python function as a tool on a FastMCP server?",
+      "source": "fastmcp_docs.txt",
+      "reference": "Create a FastMCP instance and decorate the function with @mcp.tool().",
+      "facts": [
+        "Creates a FastMCP server instance",
+        "Registers the function with the tool decorator"
+      ],
+      "answerable": true
+    },
+    {
+      "id": "mcp-stdio",
+      "query": "How do I start a FastMCP server using the stdio transport?",
+      "source": "fastmcp_docs.txt",
+      "reference": "Run the server with mcp.run(), optionally specifying transport=\"stdio\"; stdio is the default transport.",
+      "facts": [
+        "Uses the server run method",
+        "Identifies stdio as the transport or default"
+      ],
+      "answerable": true
+    },
+    {
+      "id": "python-break",
+      "query": "What does break do inside a Python loop?",
+      "source": "languages/Python.pdf",
+      "reference": "break exits the innermost enclosing loop immediately; execution resumes after the loop.",
+      "facts": [
+        "Exits the current or innermost loop",
+        "Execution continues after that loop"
+      ],
+      "answerable": true
+    },
+    {
+      "id": "python-continue",
+      "query": "How is continue different from break in a Python loop?",
+      "source": "languages/Python.pdf",
+      "reference": "continue skips the rest of the current iteration and starts the next; break exits the loop.",
+      "facts": [
+        "continue proceeds to the next iteration",
+        "break exits the loop"
+      ],
+      "answerable": true
+    },
+    {
+      "id": "js-bindings",
+      "query": "What is the difference between let and const in JavaScript?",
+      "source": "languages/Javascript.pdf",
+      "reference": "Both declare block-scoped bindings. let allows reassignment, while const prevents reassignment of the binding.",
+      "facts": [
+        "Both are block scoped",
+        "let permits reassignment while const does not"
+      ],
+      "answerable": true
+    },
+    {
+      "id": "js-equality",
+      "query": "How do == and === differ in JavaScript?",
+      "source": "languages/Javascript.pdf",
+      "reference": "== can coerce types before comparison, whereas === compares without type coercion.",
+      "facts": [
+        "== can convert or coerce operand types",
+        "=== compares without type conversion"
+      ],
+      "answerable": true
+    },
+    {
+      "id": "java-inheritance",
+      "query": "Which keywords let a Java class inherit a class and implement an interface?",
+      "source": "languages/Java.pdf",
+      "reference": "Use extends for a superclass and implements for an interface.",
+      "facts": [
+        "extends specifies a superclass",
+        "implements specifies an interface"
+      ],
+      "answerable": true
+    },
+    {
+      "id": "java-finally",
+      "query": "What is the purpose of finally after try and catch in Java?",
+      "source": "languages/Java.pdf",
+      "reference": "finally normally executes after try/catch whether or not an exception occurs, commonly to perform cleanup.",
+      "facts": [
+        "Executes whether or not an exception occurs in normal control flow",
+        "Useful for cleanup"
+      ],
+      "answerable": true
+    },
+    {
+      "id": "python-write-text",
+      "query": "How can pathlib.Path.write_text save a UTF-8 greeting and return the number of characters written?",
+      "source": "languages/Python.pdf",
+      "reference": "Path(path).write_text(text, encoding=\"utf-8\") writes the text and returns the number of characters written.",
+      "facts": [
+        "Uses Path.write_text with encoding utf-8",
+        "Returns the number of characters written"
+      ],
+      "answerable": null
+    },
+    {
+      "id": "unsupported",
+      "query": "What was the exact lunch menu aboard Apollo 11 on July 20, 1969?",
+      "source": null,
+      "reference": "The programming documentation corpus does not support this answer; abstain.",
+      "facts": [
+        "Explicitly states that the supplied sources do not answer the question",
+        "Does not invent a menu"
+      ],
+      "answerable": false
+    }
+  ]
+}

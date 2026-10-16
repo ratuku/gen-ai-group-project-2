@@ -145,11 +145,14 @@ async def collect(options: argparse.Namespace) -> None:
 
 
 async def generate(options: argparse.Namespace, rows: list[dict[str, Any]]) -> None:
-    key = os.environ.get("GROQ_API_KEY", "")
+    provider_name = getattr(options, "provider", "groq")
+    key = os.environ.get("OPENAI_API_KEY" if provider_name == "openai" else "GROQ_API_KEY", "")
     if not key:
         write_json(options.output / "state.json", {"retrieval": "complete", "answers": "missing_key"})
         return
-    provider = GroqProvider(options.model, api_key=key, max_attempts=1)
+    from coding_assistant.providers.openai import OpenAIProvider
+    provider = (OpenAIProvider(options.model, api_key=key) if provider_name == "openai"
+                else GroqProvider(options.model, api_key=key, max_attempts=1))
     answers: list[dict[str, Any]] = []
     for row in rows:
         for mode in row["mode_order"]:
@@ -157,18 +160,22 @@ async def generate(options: argparse.Namespace, rows: list[dict[str, Any]]) -> N
             text_parts: list[str] = []
             statuses: list[str] = []
             errors: list[str] = []
+            usage: list[dict[str, Any]] = []
             start = time.perf_counter()
             async for event in provider.stream([{"role": "user", "content": prompt}], []):
                 if event["type"] == "text":
                     text_parts.append(str(event["content"]))
                 elif event["type"] == "status":
                     statuses.append(str(event["content"]))
+                    if "usage" in event:
+                        usage.append(dict(event))
                 elif event["type"] == "error":
                     # Provider messages may include organization identifiers. Retain only type/code.
                     errors.append(str(event.get("error_code", "provider_error")))
             answer = {"id": row["id"], "mode": mode, "prompt_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
                       "text": "".join(text_parts), "status_messages": statuses, "errors": errors,
-                      "elapsed_seconds": round(time.perf_counter() - start, 6)}
+                      "elapsed_seconds": round(time.perf_counter() - start, 6),
+                      "provider": provider_name, "model": options.model, "usage": usage}
             answers.append(answer)
             write_json(options.output / "answers.json", answers)
             if errors or not answer["text"]:

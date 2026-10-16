@@ -15,7 +15,7 @@ RETRYABLE = {"provider_blocked"}
 COMPATIBILITY = (
     "schema_version", "python", "models", "repeats", "scope", "config_sha256", "max_iterations",
     "timeout_seconds", "tasks", "task_definition_sha256", "production_source_sha256",
-    "harness_source_sha256", "pacing_tokens_per_minute", "sampling", "execution_mode",
+    "harness_source_sha256", "sampling", "execution_mode",
 )
 
 
@@ -69,7 +69,7 @@ def outcome(events: Sequence[Mapping[str, object]], *, passed: bool, checks_pass
     if passed:
         return "passed"
     codes = {event.get("error_code") for event in events if event.get("type") == "error"}
-    if codes & {"provider_daily_limit", "provider_rate_limit", "provider_unavailable"}:
+    if codes & {"provider_daily_limit", "provider_rate_limit", "provider_unavailable", "provider_quota"}:
         return "provider_blocked"
     if "code_validation_failed" in codes or (completion == "answered" and not checks_passed):
         return "coding_failure"

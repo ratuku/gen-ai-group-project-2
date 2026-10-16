@@ -69,7 +69,7 @@ settings. Top-level `config` contains deployment/runtime files such as `mcp.json
 The concrete implementations are `BasicAgentLoop`, `GroqProvider` / `OllamaProvider`,
 `ToolDispatcher`, `PolicyMCPClient`, and the multi-server `MCPClient`. Agent history
 contains complete tool results, while the Groq adapter bounds the request view
-and pacing. Python writes trigger a policy-controlled read and syntax validation;
+and retries after recoverable API errors. Python writes trigger a policy-controlled read and syntax validation;
 behavioral correctness is measured by the separate evaluation harness.
 
 ## RAG lifecycle and design changes

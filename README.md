@@ -10,6 +10,8 @@ the system description and design decisions (page 1), two-model comparison
 architecture (page 5), and updated architecture with explanations (page 6).
 State and sequence diagrams follow on pages 7-10, including three complete
 operations across inspection, bug repair, and a documentation-assisted feature.
+Pages 11-12 contain completed OpenAI follow-up evaluations: all eight coding slots
+and all 20 paired RAG answers. Earlier Groq results remain as historical evidence.
 Supporting files under `evaluations/` are test records, not additional submission
 reports. See the [submission guide](output/pdf/README.md) for supporting evidence and current
 validation limits.
@@ -73,7 +75,7 @@ Set the variable in Windows Environment Variables first if it is missing.
 For Ollama, start the local service, pull a tool-capable model, and set
 `OLLAMA_MODEL` as described below. Cloud limits are controlled by Groq; the
 project does not require a paid upgrade. [Free-tier testing notes](evaluations/model_comparison/FREE_TIER_TESTING_NOTES.md)
-explain pacing and resumable coding runs.
+explain provider limits and resumable coding runs.
 
 Verify the implementation without cloud calls:
 
@@ -144,7 +146,7 @@ through the same agent interface:
 
 ```powershell
 $env:GROQ_API_KEY = "your-key"
-$env:GROQ_MODEL = "openai/gpt-oss-20b"  # Optional; this is the default.
+$env:GROQ_MODEL = "openai/gpt-oss-120b"  # Optional; this is the default.
 coding-assistant --provider groq
 ```
 
@@ -235,3 +237,13 @@ python -m rag_server.compare --query "How do I register a tool on a FastMCP serv
 
 See [Reranking and baseline comparison](docs/rag-reranking.md) for configuration,
 model downloads, score interpretation, tests, and limitations.
+
+## OpenAI option
+
+With `OPENAI_API_KEY` saved and API billing enabled, launch Juniper with:
+
+```powershell
+.\.venv\Scripts\coding-assistant.exe --provider openai
+```
+
+This uses `gpt-5.4-mini` by default. See [OpenAI setup](docs/openai-provider.md).

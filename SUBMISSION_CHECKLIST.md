@@ -4,8 +4,8 @@
 
 **Repository: [ratuku/gen-ai-group-project-2](https://github.com/ratuku/gen-ai-group-project-2)**
 
-This guide maps the assignment's required materials to their locations. The video
-demo is intentionally left for the team; this update does not record or submit one.
+This guide maps the assignment's required materials to their locations. The user
+reports that the video demo is completed; its contents have not been reviewed here.
 Markdown results are supporting evidence, not competing written reports.
 
 | Requirement | Location / status |
@@ -23,9 +23,16 @@ Markdown results are supporting evidence, not competing written reports.
 | File operations and command execution | Filesystem tools plus checks.run_python_check, a separate local Python script/pytest MCP tool |
 | Cloud and local provider abstraction | Groq and Ollama adapters; README/provider docs cover setup |
 | Visible tool calls, streaming, confirmation and automatic execution | CLI / execution policy implementation and regression tests |
-| Video: two non-trivial tasks and visible invocation of three required MCP servers | **Remaining: team video demo (#16), excluded from this work** |
+| Video: two non-trivial tasks and visible invocation of three required MCP servers | Completed per user; recording kept separately and not reviewed here |
 
 ## Evaluation limits to retain in the submission
+
+The OpenAI follow-up is complete: GPT-4.1 mini passed 3/4 coding tasks and GPT-4.1
+passed 4/4, with failures and traces retained. All 20 RAG answers were generated
+anew using GPT-4.1 mini and frozen paired contexts. Report pages 11-12 contain the
+results, grounding review, and limitations. See the `2026-10-15-openai-complete`
+coding folder and `2026-10-15-openai` RAG folder under the respective `results/`.
+This is a separate provider experiment; it does not complete the Groq checkpoint.
 
 The completed coding baseline is a valid same-task two-model comparison, with low
 pass rates and documented causes. Later current-policy coding retesting is partial
@@ -57,5 +64,5 @@ The static vector figures are generated from scripts/report_diagrams.py; Mermaid
 sources are in docs/diagrams.md. The PDF and documentation must be updated together
 if the implementation or evidence changes.
 
-Submitting to the course website and recording/uploading the video remain team
-actions. Repository changes are prepared for review before merge.
+Submitting to the course website and uploading the completed video remain team
+actions. Latest local changes still need publishing to the GitHub repository.

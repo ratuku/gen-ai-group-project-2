@@ -12,7 +12,16 @@ from typing import Any
 
 
 def citation_ids(text: str) -> set[str]:
-    return set(re.findall(r"[\[\u3010]([0-9a-f]{64})[\]\u3011]", text))
+    groups = re.findall(r"[\[\u3010]([^\]\u3011]+)[\]\u3011]", text)
+    return {match for group in groups for match in
+            re.findall(r"(?<![0-9a-z])([0-9a-f]{64})(?![0-9a-z])", group)}
+
+
+def citation_labels(text: str) -> set[str]:
+    """Include abbreviated/numeric reference labels so they cannot pass silently."""
+    groups = re.findall(r"[\[\u3010]([^\]\u3011]+)[\]\u3011]", text)
+    return {label.strip() for group in groups for label in group.split(",")
+            if re.fullmatch(r"[0-9a-f]+(?:\.\.\.)?", label.strip())}
 
 
 def retrieval_metrics(grades: list[int]) -> dict[str, float]:
@@ -54,11 +63,12 @@ def score(directory: Path) -> dict[str, Any]:
                     raise ValueError("Answer fact judgments do not match the reference rubric")
                 cited = citation_ids(answer["text"])
                 valid = {m["chunk_id"] for m in matches}
+                citations_valid = cited <= valid and citation_labels(answer["text"]) <= valid
                 current["answer"] = {
                     "facts_correct": sum(review["facts_correct"]), "facts_possible": len(case["facts"]),
-                    "all_citations_valid": cited <= valid,
+                    "all_citations_valid": citations_valid,
                     "citations_present": bool(cited), "abstained": review["abstained"],
-                    "fully_grounded": bool(review["all_claims_supported"] and cited <= valid
+                    "fully_grounded": bool(review["all_claims_supported"] and citations_valid
                                             and (cited or review["abstained"])),
                     "review": review["reason"],
                 }

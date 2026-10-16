@@ -1,0 +1,534 @@
+{
+  "per_query": [
+    {
+      "id": "mcp-tool",
+      "query": "How do I register a Python function as a tool on a FastMCP server?",
+      "cosine": {
+        "grades": [
+          1,
+          1,
+          1,
+          0,
+          1
+        ],
+        "precision_at_5": 0.0,
+        "reciprocal_rank_at_5": 0,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 0.0,
+        "elapsed_seconds": 0.026276,
+        "answer": {
+          "facts_correct": 0,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": true,
+          "fully_grounded": true,
+          "review": "Appropriately declines exact registration instructions; the standalone decorator heading and return type do not provide a complete server registration example."
+        }
+      },
+      "rerank": {
+        "grades": [
+          1,
+          2,
+          2,
+          1,
+          1
+        ],
+        "precision_at_5": 0.4,
+        "reciprocal_rank_at_5": 0.5,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.482464,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": false,
+          "citations_present": false,
+          "abstained": false,
+          "fully_grounded": false,
+          "review": "Instance and @mcp.tool example exactly match 010a327c; metadata/validation and variadic restrictions match a6514f06. However, abbreviated citation IDs fail citation validation."
+        }
+      }
+    },
+    {
+      "id": "mcp-stdio",
+      "query": "How do I start a FastMCP server using the stdio transport?",
+      "cosine": {
+        "grades": [
+          1,
+          1,
+          1,
+          0,
+          1
+        ],
+        "precision_at_5": 0.0,
+        "reciprocal_rank_at_5": 0,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 0.0,
+        "elapsed_seconds": 0.02144,
+        "answer": {
+          "facts_correct": 1,
+          "facts_possible": 2,
+          "all_citations_valid": false,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": false,
+          "review": "Describes supported client transport lifecycle and command-generation helper, but gives neither a runnable command nor server.run invocation. One copied citation ID is malformed."
+        }
+      },
+      "rerank": {
+        "grades": [
+          1,
+          1,
+          2,
+          1,
+          0
+        ],
+        "precision_at_5": 0.2,
+        "reciprocal_rank_at_5": 0.3333333333333333,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.542934,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": true,
+          "review": "Accepts equivalent CLI startup: fastmcp run my_server.py:mcp and default stdio are explicit in 258c4e26. Inspector/transport claims are also supplied."
+        }
+      }
+    },
+    {
+      "id": "python-break",
+      "query": "What does break do inside a Python loop?",
+      "cosine": {
+        "grades": [
+          0,
+          2,
+          0,
+          2,
+          1
+        ],
+        "precision_at_5": 0.4,
+        "reciprocal_rank_at_5": 0.5,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.02335,
+        "answer": {
+          "facts_correct": 1,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": true,
+          "review": "Correct immediate loop exit from Python p28/p29; does not explicitly state that execution resumes after the loop. No unsupported extra claim."
+        }
+      },
+      "rerank": {
+        "grades": [
+          2,
+          0,
+          0,
+          2,
+          0
+        ],
+        "precision_at_5": 0.4,
+        "reciprocal_rank_at_5": 1.0,
+        "direct_hit_at_1": 1.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.439402,
+        "answer": {
+          "facts_correct": 1,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": true,
+          "review": "Correct immediate exit from supplied Python definition; omits explicit continuation after the loop. Both full IDs are valid grouped citations."
+        }
+      }
+    },
+    {
+      "id": "python-continue",
+      "query": "How is continue different from break in a Python loop?",
+      "cosine": {
+        "grades": [
+          2,
+          0,
+          2,
+          0,
+          1
+        ],
+        "precision_at_5": 0.4,
+        "reciprocal_rank_at_5": 1.0,
+        "direct_hit_at_1": 1.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.018367,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": true,
+          "review": "Python p29 explains skipping the current iteration and Python p28/p29 support break. Claims are within supplied evidence."
+        }
+      },
+      "rerank": {
+        "grades": [
+          2,
+          0,
+          0,
+          0,
+          0
+        ],
+        "precision_at_5": 0.2,
+        "reciprocal_rank_at_5": 1.0,
+        "direct_hit_at_1": 1.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.366908,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": true,
+          "review": "Python p29 supports continue and break; moving after loop is the control-flow implication of exiting. Other retrieved wrong-language context need not be relied upon."
+        }
+      }
+    },
+    {
+      "id": "js-bindings",
+      "query": "What is the difference between let and const in JavaScript?",
+      "cosine": {
+        "grades": [
+          2,
+          2,
+          2,
+          2,
+          1
+        ],
+        "precision_at_5": 0.8,
+        "reciprocal_rank_at_5": 1.0,
+        "direct_hit_at_1": 1.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.021402,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": false,
+          "review": "Both reference facts are correct. Additional blanket claim that var has global scope is misleading for function declarations, even though the introductory source itself oversimplifies it."
+        }
+      },
+      "rerank": {
+        "grades": [
+          2,
+          2,
+          2,
+          1,
+          1
+        ],
+        "precision_at_5": 0.6,
+        "reciprocal_rank_at_5": 1.0,
+        "direct_hit_at_1": 1.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.41973,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": true,
+          "review": "Block scope and reassignment are explicit in supplied JS passages; function/global scope distinction for var is supported by the additional function-scoped passage."
+        }
+      }
+    },
+    {
+      "id": "js-equality",
+      "query": "How do == and === differ in JavaScript?",
+      "cosine": {
+        "grades": [
+          1,
+          2,
+          1,
+          1,
+          0
+        ],
+        "precision_at_5": 0.2,
+        "reciprocal_rank_at_5": 0.5,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.017318,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": true,
+          "review": "Five/string-five examples and loose versus strict equality match supplied examples. General value/type wording follows the introductory evidence."
+        }
+      },
+      "rerank": {
+        "grades": [
+          1,
+          0,
+          2,
+          2,
+          1
+        ],
+        "precision_at_5": 0.4,
+        "reciprocal_rank_at_5": 0.3333333333333333,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.411338,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": true,
+          "review": "Loose/strict equality and numeric/string examples directly follow the supplied JS comparison passages."
+        }
+      }
+    },
+    {
+      "id": "java-inheritance",
+      "query": "Which keywords let a Java class inherit a class and implement an interface?",
+      "cosine": {
+        "grades": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "precision_at_5": 0.0,
+        "reciprocal_rank_at_5": 0,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 0.0,
+        "elapsed_seconds": 0.020215,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": false,
+          "review": "States the correct extends/implements keywords, then claims evidence is insufficient. Exact implements syntax is absent from the supplied cosine passages; prior knowledge fills the gap despite the prompt."
+        }
+      },
+      "rerank": {
+        "grades": [
+          2,
+          1,
+          1,
+          2,
+          1
+        ],
+        "precision_at_5": 0.4,
+        "reciprocal_rank_at_5": 1.0,
+        "direct_hit_at_1": 1.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.392617,
+        "answer": {
+          "facts_correct": 0,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": false,
+          "abstained": true,
+          "fully_grounded": false,
+          "review": "Over-abstains and falsely says the keywords are absent: 95a6ae28 explicitly says implements clause and extending an abstract class. Does not provide either requested keyword."
+        }
+      }
+    },
+    {
+      "id": "java-finally",
+      "query": "What is the purpose of finally after try and catch in Java?",
+      "cosine": {
+        "grades": [
+          0,
+          1,
+          0,
+          0,
+          2
+        ],
+        "precision_at_5": 0.2,
+        "reciprocal_rank_at_5": 0.2,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.018424,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": false,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": false,
+          "review": "Java resource-management passages support cleanup despite exceptions/returns and obscured exceptions. Spurious citation [55] makes citation validity fail."
+        }
+      },
+      "rerank": {
+        "grades": [
+          0,
+          1,
+          2,
+          1,
+          1
+        ],
+        "precision_at_5": 0.2,
+        "reciprocal_rank_at_5": 0.3333333333333333,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 1.0,
+        "elapsed_seconds": 0.406091,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": true,
+          "abstained": false,
+          "fully_grounded": true,
+          "review": "Java p34 supports finally cleanup despite exceptions/returns and p36 supports try-with-resources/suppressed-exception comparison; wrong-language top passage is not needed to support the core explanation."
+        }
+      }
+    }
+  ],
+  "aggregate": {
+    "cosine": {
+      "answerable_queries": 8,
+      "precision_at_5": 0.25,
+      "reciprocal_rank_at_5": 0.4,
+      "direct_hit_at_1": 0.25,
+      "direct_hit_at_5": 0.625,
+      "median_retrieval_seconds": 0.0208085,
+      "generated_answers": 8,
+      "correct_reference_facts": 12,
+      "possible_reference_facts": 16,
+      "fully_grounded_answers": 4,
+      "answers_with_valid_citations": 6
+    },
+    "rerank": {
+      "answerable_queries": 8,
+      "precision_at_5": 0.35000000000000003,
+      "reciprocal_rank_at_5": 0.6875,
+      "direct_hit_at_1": 0.5,
+      "direct_hit_at_5": 1.0,
+      "median_retrieval_seconds": 0.429566,
+      "generated_answers": 8,
+      "correct_reference_facts": 13,
+      "possible_reference_facts": 16,
+      "fully_grounded_answers": 6,
+      "answers_with_valid_citations": 7
+    }
+  },
+  "controls": [
+    {
+      "id": "python-write-text",
+      "query": "How can pathlib.Path.write_text save a UTF-8 greeting and return the number of characters written?",
+      "cosine": {
+        "grades": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "precision_at_5": 0.0,
+        "reciprocal_rank_at_5": 0,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 0.0,
+        "elapsed_seconds": 0.025595,
+        "answer": {
+          "facts_correct": 0,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": false,
+          "abstained": true,
+          "fully_grounded": true,
+          "review": "Correctly abstains; supplied passages lack the Path.write_text API and UTF-8/count signature."
+        }
+      },
+      "rerank": {
+        "grades": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "precision_at_5": 0.0,
+        "reciprocal_rank_at_5": 0,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 0.0,
+        "elapsed_seconds": 0.469937,
+        "answer": {
+          "facts_correct": 0,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": false,
+          "abstained": true,
+          "fully_grounded": true,
+          "review": "Correctly abstains on the same missing exact-API coverage."
+        }
+      }
+    },
+    {
+      "id": "unsupported",
+      "query": "What was the exact lunch menu aboard Apollo 11 on July 20, 1969?",
+      "cosine": {
+        "grades": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "precision_at_5": 0.0,
+        "reciprocal_rank_at_5": 0,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 0.0,
+        "elapsed_seconds": 0.018209,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": false,
+          "abstained": true,
+          "fully_grounded": true,
+          "review": "Explicitly says programming passages do not answer the menu question; invents no menu."
+        }
+      },
+      "rerank": {
+        "grades": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "precision_at_5": 0.0,
+        "reciprocal_rank_at_5": 0,
+        "direct_hit_at_1": 0.0,
+        "direct_hit_at_5": 0.0,
+        "elapsed_seconds": 0.453608,
+        "answer": {
+          "facts_correct": 2,
+          "facts_possible": 2,
+          "all_citations_valid": true,
+          "citations_present": false,
+          "abstained": true,
+          "fully_grounded": true,
+          "review": "Explicitly declines unsupported historical menu question; invents no menu."
+        }
+      }
+    }
+  ]
+}

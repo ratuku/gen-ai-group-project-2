@@ -63,7 +63,7 @@ class StateDiagram(Flowable):
         c.setFont("Helvetica", 7)
         c.drawString(361, 111, "observe / iterate")
         c.drawString(4, 25, "Completed or failed task -> next prompt. /exit or interruption -> close clients and exit.")
-        c.drawString(4, 12, "Invalid calls return errors without execution. Groq retry/pacing is bounded inside its adapter.")
+        c.drawString(4, 12, "Invalid calls return errors without execution. Groq retries are bounded inside its adapter.")
 
 
 SCENARIOS = [

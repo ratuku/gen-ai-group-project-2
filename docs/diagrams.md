@@ -14,7 +14,7 @@ stateDiagram-v2
     Connect --> Ready: connect servers / discover tools
     Connect --> Exit: connection error
     Ready --> Model: user task / retain history
-    Model --> Model: bounded provider pacing or recovery
+    Model --> Model: bounded provider recovery
     Model --> Validate: model requests tools
     Model --> Finish: final text / no tool calls
     Model --> Failed: provider error or iteration limit
@@ -35,7 +35,7 @@ stateDiagram-v2
 ```
 
 Syntax validation runs once after each edited path in a tool batch, not recursively
-after its own read. Rejected or failed reads leave syntax unverified. The eight-step
+after its own read. Rejected or failed reads leave syntax unverified. The 40-step
 agent limit and bounded Groq retries prevent unbounded model/tool loops.
 
 ## Operation 1: inspect and explain existing code (confirmation)
